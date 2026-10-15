@@ -1,0 +1,51 @@
+{
+  "simulation_id": "SIM-MICHAUNG-SAMPLE",
+  "timestamp": "2023-12-04T12:00:00Z",
+  "revision": 1,
+  "roads": [
+    {
+      "id": "R001",
+      "source": "N001",
+      "target": "N002",
+      "status": "open",
+      "risk_score": 0.35,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [80.2707, 13.0827],
+          [80.281, 13.091]
+        ]
+      }
+    }
+  ],
+  "shelters": [
+    {
+      "id": "S001",
+      "name": "Sample Relief Shelter",
+      "location": [80.281, 13.091],
+      "capacity": 500,
+      "occupancy": 120,
+      "demand": {
+        "water_liters": 800,
+        "food_rations": 300
+      }
+    }
+  ],
+  "relief_units": [
+    {
+      "id": "U001",
+      "location": [80.2707, 13.0827],
+      "inventory": {
+        "water_liters": 1000,
+        "food_rations": 400
+      }
+    }
+  ],
+  "zones": [
+    {
+      "id": "Z001",
+      "risk_score": 0.6,
+      "affected_population": 2500
+    }
+  ]
+}

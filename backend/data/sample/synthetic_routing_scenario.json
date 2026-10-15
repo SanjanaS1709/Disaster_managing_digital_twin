@@ -1,0 +1,118 @@
+{
+  "scenario_id": "SYNTHETIC-ROUTING-001",
+  "description": "Synthetic test topology; not validated historical Michaung data.",
+  "roads": [
+    {
+      "id": "R001",
+      "source": "N001",
+      "target": "N002",
+      "status": "flooded",
+      "risk_score": 0.9,
+      "distance_m": 1000,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[80.0, 13.0], [80.01, 13.0]]
+      }
+    },
+    {
+      "id": "R002",
+      "source": "N001",
+      "target": "N003",
+      "status": "open",
+      "risk_score": 0.1,
+      "distance_m": 800,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[80.0, 13.0], [80.0, 13.01]]
+      }
+    },
+    {
+      "id": "R003",
+      "source": "N003",
+      "target": "N002",
+      "status": "open",
+      "risk_score": 0.1,
+      "distance_m": 800,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[80.0, 13.01], [80.01, 13.0]]
+      }
+    },
+    {
+      "id": "R004",
+      "source": "N001",
+      "target": "N004",
+      "status": "open",
+      "risk_score": 0.2,
+      "distance_m": 950,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[80.0, 13.0], [80.01, 13.01]]
+      }
+    },
+    {
+      "id": "R005",
+      "source": "N004",
+      "target": "N002",
+      "status": "open",
+      "risk_score": 0.2,
+      "distance_m": 950,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[80.01, 13.01], [80.01, 13.0]]
+      }
+    },
+    {
+      "id": "R006",
+      "source": "N002",
+      "target": "N005",
+      "status": "open",
+      "risk_score": 0.1,
+      "distance_m": 900,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[80.01, 13.0], [80.02, 13.0]]
+      }
+    }
+  ],
+  "relief_units": [
+    {
+      "id": "U001",
+      "location": "N001",
+      "inventory": {
+        "water_liters": 55,
+        "food_rations": 20
+      }
+    }
+  ],
+  "shelters": [
+    {
+      "id": "S001",
+      "name": "Synthetic High-Priority Shelter",
+      "location": "N002",
+      "capacity": 100,
+      "occupancy": 70,
+      "demand": {
+        "water_liters": 40,
+        "food_rations": 30
+      },
+      "priority": 0.9,
+      "risk_score": 0.8,
+      "affected_population": 1000
+    },
+    {
+      "id": "S002",
+      "name": "Synthetic Second Shelter",
+      "location": "N005",
+      "capacity": 100,
+      "occupancy": 90,
+      "demand": {
+        "water_liters": 50,
+        "food_rations": 25
+      },
+      "priority": 0.6,
+      "risk_score": 0.6,
+      "affected_population": 1500
+    }
+  ]
+}
