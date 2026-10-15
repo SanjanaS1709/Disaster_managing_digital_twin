@@ -1,0 +1,12 @@
+{
+  "event_id": "EVT-001",
+  "simulation_id": "SIM-MICHAUNG-SAMPLE",
+  "type": "ROAD_FLOODED",
+  "timestamp": "2023-12-04T12:05:00Z",
+  "target_id": "R001",
+  "payload": {
+    "reported_status": "flooded",
+    "severity": "high"
+  },
+  "source": "sample_operator_report"
+}

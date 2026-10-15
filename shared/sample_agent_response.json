@@ -1,0 +1,25 @@
+{
+  "event_id": "EVT-001",
+  "state_revision": 1,
+  "risk_assessments": [
+    {
+      "target_id": "R001",
+      "risk_score": 0.9,
+      "level": "high",
+      "summary": "Illustrative assessment following the reported road flooding."
+    }
+  ],
+  "proposed_actions": [
+    {
+      "type": "reroute_relief_unit",
+      "unit_id": "U001",
+      "destination_id": "S001",
+      "route_road_ids": ["R001", "R002"],
+      "status": "proposed"
+    }
+  ],
+  "reasoning_trace": [
+    "A road-flooding event was reported for R001.",
+    "An illustrative reroute proposal was produced for human review."
+  ]
+}
