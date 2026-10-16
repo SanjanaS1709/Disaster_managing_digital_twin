@@ -13,6 +13,7 @@ from .state_manager import state_manager
 from .decisions import decision_manager
 from .models import AgentResponse, ProposedAction, DecisionStatus
 from .live import live_clients
+from .api.agents import router as agents_router
 
 
 app = FastAPI(
@@ -20,6 +21,7 @@ app = FastAPI(
     description="Digital twin backend for disaster relief logistics",
     version="0.1.0"
 )
+app.include_router(agents_router)
 
 app.add_middleware(
     CORSMiddleware,

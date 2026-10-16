@@ -19,6 +19,17 @@ $env:FIREBASE_SERVICE_ACCOUNT_JSON = 'C:\secure\service-account.json'
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --workers 1
 ```
 
+On this Windows workspace, keep project-specific settings in the ignored local
+`backend/.env` file and start the service with `./start_firestore.ps1`. The
+launcher reads that file into the process environment; the FastAPI app itself
+does not load `.env` files. Never put service-account contents in `.env`.
+
+To preserve an existing local run when connecting a new, empty Firestore
+collection, run `python -m script.migrate_local_to_firestore` from `backend`
+with the same Firestore settings in the environment. The migration refuses to
+overwrite a non-empty simulation namespace, stores road status deltas, and keeps
+static road geometry in the local GraphML file. Use one Uvicorn worker.
+
 The credential variable accepts a file path, never inline credential JSON. Keep
 the file outside the repository, restrict filesystem permissions, and never log
 its contents. Alternatively omit it and use Application Default Credentials

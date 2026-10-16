@@ -4,7 +4,6 @@ import math
 import os
 from pathlib import Path
 import tempfile
-import warnings
 import networkx as nx
 import osmnx as ox
 from pyproj import CRS
@@ -77,17 +76,23 @@ def synthetic_graph():
 def load_roads():
     path = DATA_DIR / 'chennai_roads.graphml'
     if not path.exists():
-        warnings.warn('No local network: using labeled synthetic_demo roads.', stacklevel=2)
-        g = synthetic_graph()
-    else:
-        g = prepare_graph(ox.io.load_graphml(path))
+        raise FileNotFoundError(
+            f'Road network data is missing: {path}. '
+            'Add the real GraphML road network or import a real OSM extract before starting the API.'
+        )
+    g = prepare_graph(ox.io.load_graphml(path))
     return [dict(f['properties'], coordinates=f['geometry']['coordinates']) for f in feature_collection(g)['features']]
 
 
 def routing_graph(state):
     """Routing copy with blocked directed edges removed by stable road ID."""
     path = DATA_DIR / 'chennai_roads.graphml'
-    g = prepare_graph(ox.io.load_graphml(path)) if path.exists() else synthetic_graph()
+    if not path.exists():
+        raise FileNotFoundError(
+            f'Road network data is missing: {path}. '
+            'Routing requires the real GraphML road network.'
+        )
+    g = prepare_graph(ox.io.load_graphml(path))
     roads = {r.id: r for r in state.roads}
     if set(roads) != {e['road_id'] for *_, e in g.edges(data=True, keys=True)}:
         raise ValueError('State and network differ; reset after replacing data')

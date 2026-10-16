@@ -2,8 +2,12 @@
 
 The backend exposes versioned TwinState, directed GraphML/GeoJSON roads,
 simulation events, decision proposals, local persistence, and WebSocket updates.
-The active road data is explicitly `synthetic_demo` with 3 nodes and 4 directed
-edges. See `backend/data/manifest.json`.
+The active road network is the user-provided contemporary OpenStreetMap T. Nagar
+extract: 9,502 road nodes and 18,987 directed road segments. The compressed
+source is `backend/data/raw/Chennai_TNagar_DisasterTwin.osm.gz`; the API loads
+`backend/data/processed/chennai_roads.graphml`. Road geometry comes from OSM;
+road conditions, hazards, shelters, and supplies remain simulation/demo data.
+See `backend/data/manifest.json`.
 
 Member 2 should read `GET /api/simulation/snapshot?revision=N` and use its
 revision as the optimistic concurrency token. GraphML edge `road_id`, GeoJSON
@@ -28,6 +32,6 @@ The application persists atomically to `SIMULATION_DB_PATH`, defaulting to
 loudly and is never replaced with synthetic state. Firebase is optional and not
 live-verified. For contemporary OSM, obtain a bounded extract from
 [BBBike](https://extract.bbbike.org/) and run
-`script/import_osm.py --input data/raw/chennai.osm --area t_nagar`, then
+`script/import_osm.py --input data/raw/Chennai_TNagar_DisasterTwin.osm.gz --area t_nagar`, then
 `script/validate_data.py`. The checked-in fixture is not Chennai data or a
 historical Michaung reconstruction.

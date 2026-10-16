@@ -77,11 +77,17 @@ The original reported 502 was an upstream capacity response with a non-JSON body
 A live attempt here timed out, and the primary server's status URL returned HTTP
 406 even outside the sandbox. Thus server/network availability remains external
 to this fix; no successful real OSM download is implied by passing offline tests.
-The second endpoint (overpass.kumi.systems) returned HTTP 500 with HTML, reproducing the JSON parsing symptom. Both live attempts failed. The required processed outputs were generated using explicit synthetic_demo mode (3 nodes, 4 edges).
+The second endpoint (overpass.kumi.systems) returned HTTP 500 with HTML, reproducing the JSON parsing symptom. Both live attempts failed at that time. The user later supplied a BBBike XML extract, which is now the active road network (9,502 retained nodes and 18,987 directed edges; see `data/manifest.json`).
 
 ## Offline local GIS import
 
 Use `script/import_osm.py` when Overpass is unavailable. The importer accepts a local `.osm` XML extract with no extra parser dependency and preserves actual OSM way/node topology, drivable highway tags, one-way tags, parallel edges, OSM IDs and EPSG:4326 coordinates. Crossing lines are not connected unless they share an OSM node. `.osm.pbf` input is recognized and gives an explicit `pyosmium` installation message; this environment does not have pyosmium, so no PBF has been claimed as imported.
+
+Compressed OSM XML extracts (`.osm.gz`) can be imported directly:
+
+```powershell
+python script/import_osm.py --input data/raw/Chennai_TNagar_DisasterTwin.osm.gz --area t_nagar
+```
 
 ```powershell
 cd C:\Users\DELL\full_stack\agentic-disaster-twin\backend
@@ -92,7 +98,7 @@ C:\Python313\python.exe -m uvicorn app.main:app --reload
 
 Download a small Chennai extract manually from [BBBike](https://extract.bbbike.org/) using a T. Nagar bounding box, then save it under `data/raw`. A larger current Southern Zone PBF is available from [Geofabrik](https://download.geofabrik.de/asia/india/southern-zone.html), but it is hundreds of MB and represents contemporary OSM, not December 2023. For PBF support install `C:\Python313\python.exe -m pip install pyosmium`, or convert/select an XML extract with an external Osmium workflow before importing.
 
-The checked-in `data/raw/osm_fixture.osm` is a tiny structural test fixture only: it is explicitly not Chennai data. The active T. Nagar graph is imported from `data/raw/chennai.osm/Chennai_TNagar_DisasterTwin.osm`; its manifest records OSM XML provenance, bounds and counts. The importer retains only nodes referenced by retained drivable road segments, preserving road topology while dropping unrelated OSM points. Run `python -m unittest discover -s tests -v` to test one-way and bidirectional behavior, CRS, stable IDs, staged exports, and invalid-input handling. Facilities can be imported with `app.geodata.import_facilities` from CSV or GeoJSON; use `data/raw/facilities_template.csv`. The importer validates required fields, duplicate IDs, WGS84 bounds, study-area bounds, ISO observation dates and nonnegative capacities. No verified facility, rainfall, flood, DEM or boundary dataset is currently present. `data/manifest.json` records these classifications.
+The checked-in `data/raw/osm_fixture.osm` is a tiny structural test fixture only: it is explicitly not Chennai data. The active T. Nagar graph was imported from `data/raw/Chennai_TNagar_DisasterTwin.osm.gz`; its manifest records OSM XML provenance, bounds and counts. The importer retains only nodes referenced by retained drivable road segments, preserving road topology while dropping unrelated OSM points. Run `python -m unittest discover -s tests -v` to test one-way and bidirectional behavior, CRS, stable IDs, staged exports, and invalid-input handling. Facilities can be imported with `app.geodata.import_facilities` from CSV or GeoJSON; use `data/raw/facilities_template.csv`. The importer validates required fields, duplicate IDs, WGS84 bounds, study-area bounds, ISO observation dates and nonnegative capacities. No verified facility, rainfall, flood, DEM or boundary dataset is currently present. `data/manifest.json` records these classifications.
 
 ## Simulation core integration
 

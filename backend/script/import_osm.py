@@ -22,10 +22,15 @@ def main():
     save_network(graph, args.output_dir)
     manifest = Path(args.output_dir).parent / "manifest.json" if args.output_dir.name == "processed" else args.output_dir / "manifest.json"
     document = json.loads(manifest.read_text(encoding="utf-8")) if manifest.exists() else {}
+    backend_root = Path(__file__).resolve().parents[1]
+    try:
+        source_reference = args.input.resolve().relative_to(backend_root).as_posix()
+    except ValueError:
+        source_reference = str(args.input.resolve())
     document["roads"] = {
         "classification": "contemporary_osm",
         "source_organization": "OpenStreetMap contributors",
-        "source_file": str(args.input.resolve()),
+        "source_file": source_reference,
         "source_generator": graph.graph.get("source_generator"),
         "source_bounds": graph.graph.get("source_bounds"),
         "coverage": args.area,

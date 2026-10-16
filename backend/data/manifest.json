@@ -2,7 +2,7 @@
   "roads": {
     "classification": "contemporary_osm",
     "source_organization": "OpenStreetMap contributors",
-    "source_file": "C:\\Users\\DELL\\full_stack\\agentic-disaster-twin\\backend\\data\\raw\\chennai.osm\\Chennai_TNagar_DisasterTwin.osm",
+    "source_file": "data/raw/Chennai_TNagar_DisasterTwin.osm.gz",
     "source_generator": "osmium/1.15.0",
     "source_bounds": {
       "minlat": "13.0179",

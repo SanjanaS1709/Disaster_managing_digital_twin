@@ -1,1 +1,59 @@
-<!-- Lightweight dashboard page shell; Leaflet UI will be added in a later phase. -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090a10">
+  <title>FieldOps · Live Response Intelligence</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/scenario.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="dashboard-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#overview"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 28 9.5v13L16 29 4 22.5v-13L16 3Z"/><path d="M16 9v14M9 12.5l14 7M23 12.5l-14 7"/></svg></span><span class="brand-name">FIELD<span>OPS</span><small>RESPONSE NETWORK</small></span></a>
+      <div class="workspace-switch"><span class="switch-icon">◈</span><span><small>ACTIVE OPERATION</small><b>Cyclone Michaung</b></span><span class="switch-arrow">⌄</span></div>
+      <div class="nav-caption">OPERATIONS</div>
+      <nav class="nav-list">
+        <a class="nav-link active" href="#overview"><span class="nav-icon">◫</span>Overview</a>
+        <a class="nav-link" href="#map-panel"><span class="nav-icon">⌖</span>Situation map</a>
+        <a class="nav-link" href="#shelters"><span class="nav-icon">⌂</span>Shelters</a>
+        <a class="nav-link" href="#resources"><span class="nav-icon">▦</span>Relief units</a>
+        <a class="nav-link" href="#agents"><span class="nav-icon">✳</span>AI agents<span class="nav-soon">OFFLINE</span></a>
+      </nav>
+      <div class="sidebar-bottom"><div class="sidebar-health"><span class="health-indicator"></span><span><b>Backend disconnected</b><small>Showing local demo state</small></span></div><div class="profile-row"><span class="profile-avatar">OP</span><span><b>Operations desk</b><small>Local workspace</small></span><button aria-label="Profile options">···</button></div></div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar"><div class="breadcrumbs"><span>FIELDOPS</span><i>/</i><b>DISASTER RESPONSE</b></div><nav class="primary-nav" aria-label="Page sections"><a class="nav-link active" href="#overview">Overview</a><a class="nav-link" href="#map-panel">Map</a><a class="nav-link" href="#shelters">Shelters</a><a class="nav-link" href="#resources">Relief supplies</a><a class="nav-link" href="#agents">Decision support</a></nav><div class="topbar-right"><span class="scenario-chip"><i></i> DEMO SCENARIO</span><span class="top-separator"></span><span class="connection-status"><i></i> Backend disconnected</span></div></header>
+      <div class="content-wrap">
+        <section class="hero-heading"><div><div class="eyebrow"><span></span> EMERGENCY OPERATIONS CENTER <b>·</b> CHENNAI, INDIA</div><h1>Live response intelligence<span>.</span></h1><p>Operational picture for Cyclone Michaung · <strong>OpenStreetMap roads; simulated conditions</strong></p></div><div class="hero-status"><div class="status-orb"><span></span></div><div><small>SCENARIO STATUS</small><b>Local demo state</b><span>04 Dec 2023 · 10:00 IST</span></div></div></section>
+
+        <section class="metric-grid" aria-label="Scenario metrics">
+          <article class="metric-card metric-purple"><div class="metric-head"><span>ROAD NETWORK</span><span class="metric-glyph">⌁</span></div><div class="metric-main"><b id="metric-roads">—</b><span class="metric-unit">segments</span></div><div class="metric-bottom"><span class="tiny-status red"></span><span id="metric-blocked">— blocked</span><i></i><span id="metric-restricted">— restricted</span></div><div class="metric-spark spark-purple"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <article class="metric-card metric-cyan"><div class="metric-head"><span>ACTIVE SHELTERS</span><span class="metric-glyph">⌂</span></div><div class="metric-main"><b id="metric-shelters">—</b><span class="metric-unit">facilities</span></div><div class="metric-bottom"><span class="tiny-status cyan"></span><span id="metric-occupancy">— occupied</span><i></i><span id="metric-capacity">— available</span></div><div class="metric-wave"><svg viewBox="0 0 180 42" preserveAspectRatio="none" aria-hidden="true"><path d="M0 35 C16 32 13 25 29 28 S47 34 58 21 S76 24 87 17 S102 25 115 17 S137 12 146 17 S165 6 180 4"/></svg></div></article>
+          <article class="metric-card metric-orange"><div class="metric-head"><span>RELIEF UNITS</span><span class="metric-glyph">✣</span></div><div class="metric-main"><b id="metric-units">—</b><span class="metric-unit">field assets</span></div><div class="metric-bottom"><span class="tiny-status orange"></span><span>Illustrative local inventory</span></div><div class="metric-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <article class="metric-card metric-green"><div class="metric-head"><span>AFFECTED ZONES</span><span class="metric-glyph">◎</span></div><div class="metric-main"><b id="metric-zones">—</b><span class="metric-unit">risk overlays</span></div><div class="metric-bottom"><span class="tiny-status green"></span><span>Flood risk · synthetic</span></div><div class="zone-rings"><i></i><i></i><i></i><b>DEMO</b></div></article>
+        </section>
+
+        <section class="primary-grid">
+          <article class="panel map-panel" id="map-panel"><div class="panel-header"><div><div class="panel-title"><span class="panel-icon purple-icon">⌖</span><h2>Regional situation map</h2><span class="panel-tag">OPENSTREETMAP</span></div><p>Chennai &amp; Tiruvallur district · Tamil Nadu, India</p></div><div class="panel-tools"><span class="map-coordinates">13.08° N&nbsp; 80.27° E</span><button class="panel-menu" id="map-reset" type="button" title="Reset map view" aria-label="Reset map view">⤢</button></div></div><div class="map-frame"><div id="map" role="application" aria-label="Interactive disaster response map"></div><div class="map-label"><span>⌖</span> RESPONSE AREA <i></i> OPENSTREETMAP NETWORK</div></div><div class="map-legend"><span class="legend-title">SIMULATED ROAD STATUS</span><span><i class="road-swatch open"></i>Open</span><span><i class="road-swatch restricted"></i>Restricted</span><span><i class="road-swatch blocked"></i>Blocked</span><b></b><span><i class="zone-swatch"></i>Shelters &amp; units</span><span class="map-credit">© OpenStreetMap contributors</span></div></article>
+
+          <article class="panel status-panel"><div class="panel-header"><div><div class="panel-title"><span class="panel-icon orange-icon">◌</span><h2>Road access status</h2></div><p>Road condition changes are simulated</p></div></div><div class="status-chart"><div class="status-donut"><div><b id="chart-road-total">8</b><small>roads</small></div></div><div class="status-legend"><div><i class="legend-dot open-dot"></i><span>Open</span><b id="road-open">—</b></div><div><i class="legend-dot restricted-dot"></i><span>Restricted</span><b id="road-restricted">—</b></div><div><i class="legend-dot blocked-dot"></i><span>Blocked</span><b id="road-blocked">—</b></div></div></div><div class="status-note"><span>i</span> Road layout is from OpenStreetMap; road conditions are simulated.</div><section class="rainfall-summary" aria-live="polite"><div class="rainfall-heading"><b>Rainfall across the area</b><span>SIMULATED</span></div><div id="rainfall-list"></div></section><div class="risk-summary"><div><small>RUN BASELINE</small><b>Current simulation</b></div><div><small>ROAD MAP SOURCE</small><b>OpenStreetMap</b></div></div></article>
+        </section>
+
+        <section class="secondary-grid">
+          <article class="panel asset-panel" id="shelters"><div class="panel-header secondary-header"><div><div class="panel-title"><span class="panel-icon cyan-icon">⌂</span><h2>Shelter capacity</h2><span class="count-badge" id="shelter-count">0</span></div><p>Occupancy and available places · simulated</p></div><span class="panel-link">VIEW ALL <i>↗</i></span></div><div class="shelter-list" id="shelter-list"></div><div class="panel-foot">Illustrative occupancy; no live shelter reports are connected.</div></article>
+          <article class="panel asset-panel" id="resources"><div class="panel-header secondary-header"><div><div class="panel-title"><span class="panel-icon green-icon">✣</span><h2>Relief unit inventory</h2><span class="count-badge" id="unit-count">0</span></div><p>Simulated local stocks compared with shelter needs</p></div><span class="availability-badge"><i></i> DEMO</span></div><div class="unit-list" id="unit-list"></div><div class="panel-foot">Illustrative supplies only. Dispatch is not connected.</div></article>
+          <article class="panel agent-panel" id="agents"><div class="panel-header secondary-header"><div><div class="panel-title"><span class="panel-icon purple-icon">✳</span><h2>Decision support</h2></div><p>Clear event checks and suggested next steps</p></div><span class="offline-badge"><i></i> READY</span></div><div class="agent-list"><div><span class="agent-symbol">1</span><b>Event details</b><small>Waiting</small></div><div><span class="agent-symbol">2</span><b>Safety check</b><small>Waiting</small></div><div><span class="agent-symbol">3</span><b>Safe travel options</b><small>Waiting</small></div><div><span class="agent-symbol">4</span><b>Relief supplies</b><small>Waiting</small></div><div><span class="agent-symbol">5</span><b>Human review</b><small>Waiting</small></div></div><div class="panel-foot">Suggestions only. The system does not dispatch units or supplies.</div></article>
+        </section>
+        <footer class="page-footer"><span>FIELDOPS <i>·</i> DISASTER RELIEF DIGITAL TWIN</span><span><i class="footer-led"></i> Backend disconnected</span><span id="header-time">--:--:-- IST</span><span>No live emergency information</span></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

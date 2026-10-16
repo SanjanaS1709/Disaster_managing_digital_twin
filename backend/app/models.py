@@ -68,6 +68,7 @@ class RainfallMeasurement(BaseModel):
 
 class DisasterZone(BaseModel):
     id: Identifier
+    location: Coordinate | None = None
     risk_score: Risk
     affected_population: Quantity
     rainfall: list[RainfallMeasurement] = Field(default_factory=list)

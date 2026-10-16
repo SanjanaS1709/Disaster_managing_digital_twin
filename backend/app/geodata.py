@@ -6,6 +6,7 @@ standard library so the development workflow remains usable without Overpass.
 from __future__ import annotations
 
 import csv
+import gzip
 import json
 from datetime import date
 from pathlib import Path
@@ -25,7 +26,10 @@ def _bounds(bounds: tuple[float, float, float, float] | None):
 
 def import_osm_xml(path: str | Path, bounds: tuple[float, float, float, float] | None = None) -> nx.MultiDiGraph:
     """Import an OSM XML extract, preserving actual OSM way-node topology."""
-    root = ET.parse(path).getroot()
+    path = Path(path)
+    opener = gzip.open if path.name.lower().endswith(('.osm.gz', '.xml.gz')) else open
+    with opener(path, 'rb') as source:
+        root = ET.parse(source).getroot()
     nodes = {}
     inside = _bounds(bounds)
     for item in root.findall("node"):
@@ -72,7 +76,7 @@ def import_osm_xml(path: str | Path, bounds: tuple[float, float, float, float] |
 
 def import_osm(path: str | Path, bounds=None) -> nx.MultiDiGraph:
     path = Path(path)
-    if path.suffix.lower() in {".osm", ".xml"}:
+    if path.name.lower().endswith(('.osm.gz', '.xml.gz', '.osm', '.xml')):
         return import_osm_xml(path, bounds)
     if path.suffix.lower() in {".pbf", ".osm.pbf"}:
         try:
