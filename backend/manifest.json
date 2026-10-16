@@ -1,0 +1,22 @@
+{
+  "roads": {
+    "classification": "contemporary_osm",
+    "source_organization": "OpenStreetMap contributors",
+    "source_file": "C:\\Users\\DELL\\full_stack\\agentic-disaster-twin\\backend\\data\\raw\\chennai.osm\\Chennai_TNagar_DisasterTwin.osm",
+    "source_generator": "osmium/1.15.0",
+    "source_bounds": {
+      "minlat": "13.0179",
+      "minlon": "80.2046",
+      "maxlat": "13.0492",
+      "maxlon": "80.254"
+    },
+    "coverage": "t_nagar",
+    "crs": "EPSG:4326",
+    "dataset_type": "road_network",
+    "license": "Open Database License (ODbL); OpenStreetMap contributors",
+    "validation": "passed",
+    "nodes": 9502,
+    "edges": 18987,
+    "processing_notes": "Imported from local OSM XML; only nodes referenced by retained drivable segments are kept."
+  }
+}

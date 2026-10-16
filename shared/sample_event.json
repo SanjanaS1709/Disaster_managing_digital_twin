@@ -1,0 +1,11 @@
+{
+  "event_id": "demo-001",
+  "simulation_id": "michaung_demo_001",
+  "type": "ROAD_FLOODED",
+  "timestamp": "2023-12-04T10:01:00+05:30",
+  "target_id": "R_0_1_0",
+  "payload": {
+    "risk_score": 1.0
+  },
+  "source": "simulation"
+}

@@ -1,0 +1,7 @@
+{
+  "event_id": "agent-evaluation-001",
+  "state_revision": 1,
+  "risk_assessments": [],
+  "proposed_actions": [{"action_id": "route-action-001", "type": "ROUTE_ASSIGNMENT", "target_id": "S001", "unit_id": "U001", "route_road_ids": ["R_0_1_0", "R_1_2_0"], "requires_approval": true, "status": "proposed", "reason": "Example integration proposal"}],
+  "reasoning_trace": {"model": "external_agent", "summary": "Example only", "steps": []}
+}

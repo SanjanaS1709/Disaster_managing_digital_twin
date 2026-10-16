@@ -1,0 +1,10 @@
+fastapi>=0.110,<1
+uvicorn[standard]
+pydantic>=2.10,<3
+tzdata
+osmnx>=2,<3
+geopandas
+shapely
+networkx
+pyproj
+firebase-admin>=6,<8

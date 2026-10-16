@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d8" for="edge" attr.name="geometry" attr.type="string" />
+  <key id="d7" for="edge" attr.name="road_id" attr.type="string" />
+  <key id="d6" for="edge" attr.name="name" attr.type="string" />
+  <key id="d5" for="edge" attr.name="length" attr.type="string" />
+  <key id="d4" for="node" attr.name="y" attr.type="string" />
+  <key id="d3" for="node" attr.name="x" attr.type="string" />
+  <key id="d2" for="graph" attr.name="attribution" attr.type="string" />
+  <key id="d1" for="graph" attr.name="source" attr.type="string" />
+  <key id="d0" for="graph" attr.name="crs" attr.type="string" />
+  <graph edgedefault="directed">
+    <node id="0">
+      <data key="d3">80.2341</data>
+      <data key="d4">13.0418</data>
+    </node>
+    <node id="1">
+      <data key="d3">80.2351</data>
+      <data key="d4">13.0418</data>
+    </node>
+    <node id="2">
+      <data key="d3">80.2351</data>
+      <data key="d4">13.0428</data>
+    </node>
+    <edge source="0" target="1" id="0">
+      <data key="d5">110.0</data>
+      <data key="d6">Synthetic demo road</data>
+      <data key="d7">R_0_1_0</data>
+      <data key="d8">LINESTRING (80.2341 13.0418, 80.2351 13.0418)</data>
+    </edge>
+    <edge source="1" target="0" id="0">
+      <data key="d5">110.0</data>
+      <data key="d6">Synthetic demo road</data>
+      <data key="d7">R_1_0_0</data>
+      <data key="d8">LINESTRING (80.2351 13.0418, 80.2341 13.0418)</data>
+    </edge>
+    <edge source="1" target="2" id="0">
+      <data key="d5">110.0</data>
+      <data key="d6">Synthetic demo road</data>
+      <data key="d7">R_1_2_0</data>
+      <data key="d8">LINESTRING (80.2351 13.0418, 80.2351 13.0428)</data>
+    </edge>
+    <edge source="2" target="1" id="0">
+      <data key="d5">110.0</data>
+      <data key="d6">Synthetic demo road</data>
+      <data key="d7">R_2_1_0</data>
+      <data key="d8">LINESTRING (80.2351 13.0428, 80.2351 13.0418)</data>
+    </edge>
+    <data key="d0">EPSG:4326</data>
+    <data key="d1">synthetic_demo</data>
+    <data key="d2">Synthetic development fixture; not OpenStreetMap roads</data>
+  </graph>
+</graphml>

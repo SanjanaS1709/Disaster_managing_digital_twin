@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="offline-test-fixture">
+  <node id="1" lat="13.0418" lon="80.2341" />
+  <node id="2" lat="13.0418" lon="80.2351" />
+  <node id="3" lat="13.0428" lon="80.2351" />
+  <node id="4" lat="13.0438" lon="80.2351" />
+  <way id="101"><nd ref="1"/><nd ref="2"/><tag k="highway" v="residential"/><tag k="name" v="Fixture East Road"/></way>
+  <way id="102"><nd ref="2"/><nd ref="3"/><nd ref="4"/><tag k="highway" v="primary"/><tag k="oneway" v="yes"/><tag k="name" v="Fixture North Road"/></way>
+  <way id="103"><nd ref="3"/><nd ref="2"/><tag k="highway" v="footway"/></way>
+</osm>

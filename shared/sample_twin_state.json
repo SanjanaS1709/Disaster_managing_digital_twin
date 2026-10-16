@@ -1,0 +1,137 @@
+{
+  "simulation_id": "michaung_demo_001",
+  "timestamp": "2023-12-04T10:00:00+05:30",
+  "revision": 1,
+  "roads": [
+    {
+      "id": "R_0_1_0",
+      "name": "Synthetic demo road",
+      "u": "0",
+      "v": "1",
+      "key": 0,
+      "length_m": 110.0,
+      "source": "synthetic_demo",
+      "status": "open",
+      "risk_score": 0.0,
+      "coordinates": [
+        [
+          80.2341,
+          13.0418
+        ],
+        [
+          80.2351,
+          13.0418
+        ]
+      ]
+    },
+    {
+      "id": "R_1_0_0",
+      "name": "Synthetic demo road",
+      "u": "1",
+      "v": "0",
+      "key": 0,
+      "length_m": 110.0,
+      "source": "synthetic_demo",
+      "status": "open",
+      "risk_score": 0.0,
+      "coordinates": [
+        [
+          80.2351,
+          13.0418
+        ],
+        [
+          80.2341,
+          13.0418
+        ]
+      ]
+    },
+    {
+      "id": "R_1_2_0",
+      "name": "Synthetic demo road",
+      "u": "1",
+      "v": "2",
+      "key": 0,
+      "length_m": 110.0,
+      "source": "synthetic_demo",
+      "status": "open",
+      "risk_score": 0.0,
+      "coordinates": [
+        [
+          80.2351,
+          13.0418
+        ],
+        [
+          80.2351,
+          13.0428
+        ]
+      ]
+    },
+    {
+      "id": "R_2_1_0",
+      "name": "Synthetic demo road",
+      "u": "2",
+      "v": "1",
+      "key": 0,
+      "length_m": 110.0,
+      "source": "synthetic_demo",
+      "status": "open",
+      "risk_score": 0.0,
+      "coordinates": [
+        [
+          80.2351,
+          13.0428
+        ],
+        [
+          80.2351,
+          13.0418
+        ]
+      ]
+    }
+  ],
+  "shelters": [
+    {
+      "id": "S001",
+      "name": "Demo Shelter A",
+      "location": [
+        80.24,
+        13.06
+      ],
+      "capacity": 200,
+      "occupancy": 120,
+      "demand": {
+        "food": 100,
+        "water": 200
+      },
+      "source": "synthetic_demo",
+      "over_capacity": false,
+      "excess_occupancy": 0
+    }
+  ],
+  "relief_units": [
+    {
+      "id": "U001",
+      "location": [
+        80.23,
+        13.05
+      ],
+      "inventory": {
+        "food": 250,
+        "water": 400
+      },
+      "inventory_units": {
+        "food": "packs",
+        "water": "litres"
+      },
+      "source": "synthetic_demo"
+    }
+  ],
+  "zones": [
+    {
+      "id": "Z001",
+      "risk_score": 0.7,
+      "affected_population": 500,
+      "rainfall": [],
+      "source": "synthetic_demo"
+    }
+  ]
+}
