@@ -1,9 +1,8 @@
-# Shared API contract (planned)
+# Shared API contract
 
-This document records the planned integration surface; it does not define or
-implement production endpoints. Member 1 owns the single shared FastAPI
-application and all authoritative twin mutations. Member 2's agent APIs will
-be mounted into that application, not run as a second production backend.
+Member 1 owns the single shared FastAPI application and all authoritative twin
+mutations. Member 2's agent API router is intended to be mounted into that
+application, not run as a second production backend.
 
 | Endpoint | Owner | Consumer |
 |---|---|---|
@@ -23,6 +22,235 @@ be mounted into that application, not run as a second production backend.
 Member 2 returns proposed decisions; it does not directly mutate authoritative
 twin state. Any eventual action application must go through the agreed Member
 1 state-manager interface, with revision and idempotency checks.
+
+## `POST /api/agents/evaluate`
+
+The route is implemented by Member 2's `backend/app/api/agents.py` router and
+must be mounted by Member 1 in the shared application. It validates the body
+using the existing `AgentEvaluationRequest`, `TwinStateContract`,
+`DisasterEvent`, and `ReservationContract` Pydantic models, then calls the
+existing LangGraph `run_workflow()` function. The route does not load,
+persist, approve, or apply state. The caller must supply authoritative,
+read-only inputs.
+
+### Request schema
+
+The body is an object with exactly these required properties; undeclared
+properties are rejected:
+
+| Property | JSON type | Contract |
+|---|---|---|
+| `twin_state` | object | `TwinStateContract` below |
+| `event` | object | `DisasterEvent` below |
+| `current_revision` | integer | Strict integer, minimum `0`; authoritative current revision observed by the caller |
+| `seen_event_ids` | array of strings | Existing event IDs from the caller's event history |
+| `reservations` | array of objects | Each item is `{ "allocation_id": string, "unit_id": string, "shelter_id": string, "item": string, "quantity": integer }`; strings are non-empty and `quantity` is a strict integer greater than `0` |
+
+`TwinStateContract` has exactly these required properties:
+
+| Property | JSON type | Constraints |
+|---|---|---|
+| `simulation_id` | string | Non-empty |
+| `timestamp` | string | Non-empty |
+| `revision` | integer | Strict integer, minimum `0` |
+| `roads` | array of objects | Road contracts below |
+| `shelters` | array of objects | Shelter contracts below |
+| `relief_units` | array of objects | Relief-unit contracts below |
+| `zones` | array of objects | Zone contracts below |
+
+Each road object has required `id`, `source`, `status`, `risk_score`, and
+`geometry` properties. `id`, `source`, and `status` are non-empty strings;
+`risk_score` is a finite number in `[0, 1]`; `geometry` is a GeoJSON
+`LineString` with at least two `[longitude, latitude]` coordinate pairs.
+Coordinates must be finite, longitude in `[-180, 180]`, and latitude in
+`[-90, 90]`.
+Optional properties are `target` (non-empty string or `null`, default `null`),
+`distance_m` (finite number greater than `0` or `null`, default `null`), and
+`bidirectional` (boolean, default `false`).
+
+Each shelter object has required `id`, `name`, `location`, `capacity`, and
+`occupancy` properties. `id` and `name` are non-empty strings; `location` is a
+graph-node string or a coordinate pair; `capacity` and `occupancy` are strict
+non-negative integers, and occupancy cannot exceed capacity. Optional
+properties are `demand` (object mapping non-empty item names to strict
+non-negative integers, default `{}`), `priority` and `risk_score` (number in
+`[0, 1]` or `null`, default `null`), and `affected_population` (non-negative
+integer or `null`, default `null`).
+
+Each relief-unit object has required `id` and `location` properties. `id` is a
+non-empty string; `location` is a graph-node string or coordinate pair.
+Optional `inventory` maps non-empty item names to strict non-negative integers
+or `null` (unknown), and defaults to `{}`. Each zone object has required
+`id` (string), `risk_score` (finite number in `[0, 1]`), and
+`affected_population` (strict non-negative integer).
+
+`DisasterEvent` has required `event_id`, `simulation_id`, `type`, `timestamp`,
+and `source`; optional `target_id` is a string or `null`, and `payload` is an
+object defaulting to `{}`. IDs must match
+`^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$`; `type` is one of
+`ROAD_FLOODED`, `ROAD_REOPENED`, `SHELTER_OVER_CAPACITY`,
+`RESOURCE_SHORTAGE`, `RAINFALL_INCREASE`, or `UNKNOWN`. Required strings must
+be non-empty. `target_id`, when supplied, must match the same ID pattern.
+`payload` is an arbitrary JSON object; the workflow validates event-specific
+content. All request models reject undeclared properties.
+
+`current_revision` is intentionally distinct from `twin_state.revision`: the
+former is the caller's authoritative current revision, while the latter is
+the snapshot revision used for planning. A mismatch is returned to escalation
+policy; the caller must still check revision and idempotency before applying
+any proposal.
+
+### Response schema
+
+A successful evaluation returns the existing `WorkflowResponse` object.
+Properties with defaults are included in the JSON response:
+
+| Property | JSON type | Description |
+|---|---|---|
+| `simulation_id`, `event_id` | string or `null` | Identifiers for the evaluated snapshot and event |
+| `state_revision`, `current_revision` | integer or `null` | Snapshot and caller-supplied authoritative revisions |
+| `workflow_status`, `outcome` | string | Workflow status and decision outcome |
+| `agents` | object | Keys `perception`, `risk`, `routing`, `allocation`, and `escalation`; each value has required string `status` and `reason` |
+| `perception_result` | object or `null` | `status` (`validated`, `duplicate`, `rejected`, or `uncertain`), nullable `event`, `change_records`, `reevaluate_agents`, `uncertainties`, and `errors` |
+| `risk_result` | object or `null` | `target_id`, nullable `risk_score`, `level`, `contributing_factors`, `missing_indicators`, `explanation`, and `complete` |
+| `routing_result` | array | Each item has `unit_id`, `shelter_id`, and `result` (a `RouteResult`) |
+| `allocation_result` | object or `null` | Allocation ID, shelter priorities, proposals, unmet demand, remaining inventory, missing inventory, and occupant-transfer proposals |
+| `proposed_actions` | array | `AllocationProposal` objects with `allocation_id`, `unit_id`, `shelter_id`, `item`, positive integer `quantity`, `route_road_ids`, literal `status: "proposed"`, and `reason` |
+| `escalation_result` | object or `null` | Decision ID, simulation ID, status (`AUTO_APPROVED`, `PENDING_APPROVAL`, or `BLOCKED`), `requires_approval`, `rule_ids`, explanation, and literal `state_applied: false` |
+| `requires_approval` | boolean | Whether human approval is required |
+| `rejection_reasons`, `rule_ids`, `missing_data_warnings`, `errors` | arrays of strings | Policy explanations, rule identifiers, data warnings, and workflow errors |
+| `agent_trace` | array | Each item has `agent`, `status`, `summary`, and optional nullable `event_id`, `simulation_id`, and `error` |
+| `explanation` | string | Human-readable outcome explanation |
+| `state_applied` | boolean | Always `false`; an approval outcome never applies state |
+
+Nested objects retain the exact fields and validation rules of their existing
+Pydantic result contracts (`PerceptionResult`, `RiskAssessment`, `WorkflowRoute`,
+`RouteResult`, `AllocationResult`, `EscalationResult`, and
+`AgentTraceEntry`), detailed here:
+
+- `PerceptionResult`: required `status` (literal `validated`, `duplicate`,
+  `rejected`, or `uncertain`), nullable `event`, `change_records`,
+  `reevaluate_agents` (strings from `risk`, `routing`, `allocation`,
+  `escalation`), `uncertainties`, and `errors`. Each change record has
+  `entity_type` (`road`, `shelter`, `relief_unit`, `zone`, or `simulation`),
+  nullable `entity_id`, `field`, arbitrary JSON `reported_value`, and string
+  array `evidence`.
+- `RiskAssessment`: required `target_id`, nullable `risk_score` (finite number
+  in `[0, 1]`), `level` (`LOW`, `MODERATE`, `HIGH`, `CRITICAL`, or
+  `UNAVAILABLE`), `contributing_factors`, `missing_indicators`, `explanation`,
+  and `complete`. Each contributing factor has `value`, `configured_weight`,
+  `effective_weight`, and `weighted_contribution`, finite numbers in `[0, 1]`.
+- `WorkflowRoute`: required `unit_id`, `shelter_id`, and `result`.
+  `RouteResult` requires `reachable`; it also contains nullable `source`,
+  `target`, `route_geometry`, `total_cost`, and `failure_reason`, plus
+  `road_ids` and `nodes` string arrays. A reachable route must have endpoint
+  nodes, a cost, and a complete path; an unreachable route must have a reason
+  and no partial path.
+- `AllocationResult`: required `evaluation_id`, `shelter_priorities`,
+  `proposals`, `unmet_demand`, `inventory_remaining`, `missing_inventory`,
+  and `occupant_transfers`. A shelter priority has `shelter_id`, `score` in
+  `[0, 1]`, `contributing_factors`, `missing_inputs`, and `explanation`.
+  Unmet demand has `shelter_id`, `item`, positive integer `quantity`,
+  `missing_inventory_units`, and `reason`. Occupant-transfer proposals have
+  `transfer_id`, `source_shelter_id`, `destination_shelter_id`,
+  `requested_quantity`, non-negative `proposed_quantity`, `route_road_ids`,
+  `status` (`proposed` or `unavailable`), and `reason`. Inventory maps unit
+  IDs to item quantities, where each quantity is a non-negative integer or
+  `null`.
+- `EscalationResult`: required `decision_id`, `simulation_id`, `status`,
+  `requires_approval`, `rule_ids`, `explanation`, and literal
+  `state_applied: false`.
+- Each `agent_trace` entry has required `agent`, `status`, and `summary`, and
+  nullable `event_id`, `simulation_id`, and `error`.
+
+A workflow-level failure reported in the response (`outcome: "ERROR"` with
+`errors`) is still a structured `200` evaluation. Only an exception escaping
+`run_workflow()` is an HTTP `500`.
+
+### HTTP errors
+
+| Status | Response | Meaning |
+|---|---|---|
+| `422 Unprocessable Entity` | `{"detail": [{"loc": [...], "msg": "...", "type": "..."}]}` | Request body fails Pydantic validation; `detail` contains FastAPI/Pydantic validation errors |
+| `500 Internal Server Error` | `{"detail": {"code": "workflow_error", "message": "Agent workflow evaluation failed."}}` | `run_workflow()` raised an exception; details are logged server-side |
+
+### Example request
+
+```json
+{
+  "twin_state": {
+    "simulation_id": "SIM-MICHAUNG-SAMPLE",
+    "timestamp": "2023-12-04T12:00:00Z",
+    "revision": 1,
+    "roads": [
+      {
+        "id": "R001",
+        "source": "N001",
+        "target": "N002",
+        "status": "open",
+        "risk_score": 0.35,
+        "geometry": {
+          "type": "LineString",
+          "coordinates": [[80.2707, 13.0827], [80.281, 13.091]]
+        }
+      }
+    ],
+    "shelters": [
+      {
+        "id": "S001",
+        "name": "Sample Relief Shelter",
+        "location": [80.281, 13.091],
+        "capacity": 500,
+        "occupancy": 120,
+        "demand": {"water_liters": 800, "food_rations": 300}
+      }
+    ],
+    "relief_units": [
+      {
+        "id": "U001",
+        "location": [80.2707, 13.0827],
+        "inventory": {"water_liters": 1000, "food_rations": 400}
+      }
+    ],
+    "zones": [
+      {"id": "Z001", "risk_score": 0.6, "affected_population": 2500}
+    ]
+  },
+  "event": {
+    "event_id": "EVT-REOPENED",
+    "simulation_id": "SIM-MICHAUNG-SAMPLE",
+    "type": "ROAD_REOPENED",
+    "timestamp": "2023-12-04T12:20:00Z",
+    "target_id": "R001",
+    "payload": {
+      "reported_status": "open",
+      "risk_indicators": {
+        "flood_severity": 0.1,
+        "rainfall_indicator": 0.1,
+        "elevation_risk": 0.1,
+        "infrastructure_vulnerability": 0.1,
+        "population_exposure": 0.1
+      }
+    },
+    "source": "sample_operator_report"
+  },
+  "current_revision": 1,
+  "seen_event_ids": [],
+  "reservations": []
+}
+```
+
+### Mounting in the shared application
+
+`backend/app/main.py` is reserved for Member 1's FastAPI application and is
+intentionally unchanged. Member 1 should import and mount this router in the
+existing application (do not instantiate another `FastAPI` app):
+
+```python
+from app.api.agents import router as agents_router
+
+app.include_router(agents_router)
+```
 
 ## Unresolved contract choices
 
@@ -120,11 +348,10 @@ road IDs must be checked against real connected graph edges before use.
 
 ## LangGraph orchestration integration
 
-- Member 2 exposes the in-process `run_workflow` function for Member 1 to call
-  from the shared application. The `/api/agents/evaluate` route is defined in
-  Member 2's router, but it is not mounted until Member 1 includes that router
-  in the shared application. No second server is created.
-- The planned `POST /api/agents/evaluate` router accepts `twin_state`,
+- Member 2 exposes the in-process `run_workflow` function through its
+  `/api/agents/evaluate` router for Member 1 to include in the shared
+  application. No second server is created.
+- The `POST /api/agents/evaluate` route accepts `twin_state`,
   `event`, `current_revision`, `seen_event_ids`, and `reservations`. Member 1
   must source all five from authoritative state/event/commitment stores; the
   endpoint does not independently authenticate or fetch them.
