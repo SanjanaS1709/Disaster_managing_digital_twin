@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d13" for="edge" attr.name="road_id" attr.type="string" />
+  <key id="d12" for="edge" attr.name="maxspeed" attr.type="string" />
+  <key id="d11" for="edge" attr.name="oneway" attr.type="string" />
+  <key id="d10" for="edge" attr.name="highway" attr.type="string" />
+  <key id="d9" for="edge" attr.name="name" attr.type="string" />
+  <key id="d8" for="edge" attr.name="osmid" attr.type="string" />
+  <key id="d7" for="edge" attr.name="geometry" attr.type="string" />
+  <key id="d6" for="edge" attr.name="length" attr.type="string" />
+  <key id="d5" for="node" attr.name="y" attr.type="string" />
+  <key id="d4" for="node" attr.name="x" attr.type="string" />
+  <key id="d3" for="graph" attr.name="dataset_type" attr.type="string" />
+  <key id="d2" for="graph" attr.name="source_file" attr.type="string" />
+  <key id="d1" for="graph" attr.name="source" attr.type="string" />
+  <key id="d0" for="graph" attr.name="crs" attr.type="string" />
+  <graph edgedefault="directed">
+    <node id="1">
+      <data key="d4">80.2341</data>
+      <data key="d5">13.0418</data>
+    </node>
+    <node id="2">
+      <data key="d4">80.2351</data>
+      <data key="d5">13.0418</data>
+    </node>
+    <node id="3">
+      <data key="d4">80.2351</data>
+      <data key="d5">13.0428</data>
+    </node>
+    <node id="4">
+      <data key="d4">80.2351</data>
+      <data key="d5">13.0438</data>
+    </node>
+    <edge source="1" target="2" id="0">
+      <data key="d6">111.32000000053154</data>
+      <data key="d7">LINESTRING (80.2341 13.0418, 80.2351 13.0418)</data>
+      <data key="d8">101</data>
+      <data key="d9">Fixture East Road</data>
+      <data key="d10">residential</data>
+      <data key="d11">False</data>
+      <data key="d12" />
+      <data key="d13">R_1_2_0</data>
+    </edge>
+    <edge source="2" target="1" id="0">
+      <data key="d6">111.32000000053154</data>
+      <data key="d7">LINESTRING (80.2351 13.0418, 80.2341 13.0418)</data>
+      <data key="d8">101</data>
+      <data key="d9">Fixture East Road</data>
+      <data key="d10">residential</data>
+      <data key="d11">False</data>
+      <data key="d12" />
+      <data key="d13">R_2_1_0</data>
+    </edge>
+    <edge source="2" target="3" id="0">
+      <data key="d6">111.3199999999383</data>
+      <data key="d7">LINESTRING (80.2351 13.0418, 80.2351 13.0428)</data>
+      <data key="d8">102</data>
+      <data key="d9">Fixture North Road</data>
+      <data key="d10">primary</data>
+      <data key="d11">True</data>
+      <data key="d12" />
+      <data key="d13">R_2_3_0</data>
+    </edge>
+    <edge source="3" target="4" id="0">
+      <data key="d6">111.3199999999383</data>
+      <data key="d7">LINESTRING (80.2351 13.0428, 80.2351 13.0438)</data>
+      <data key="d8">102</data>
+      <data key="d9">Fixture North Road</data>
+      <data key="d10">primary</data>
+      <data key="d11">True</data>
+      <data key="d12" />
+      <data key="d13">R_3_4_0</data>
+    </edge>
+    <data key="d0">EPSG:4326</data>
+    <data key="d1">contemporary_osm</data>
+    <data key="d2">C:\Users\DELL\full_stack\agentic-disaster-twin\backend\data\raw\osm_fixture.osm</data>
+    <data key="d3">road_network</data>
+  </graph>
+</graphml>

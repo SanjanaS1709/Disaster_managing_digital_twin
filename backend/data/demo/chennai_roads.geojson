@@ -1,0 +1,117 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "R_0_1_0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.2341,
+            13.0418
+          ],
+          [
+            80.2351,
+            13.0418
+          ]
+        ]
+      },
+      "properties": {
+        "id": "R_0_1_0",
+        "source": "synthetic_demo",
+        "name": "Synthetic demo road",
+        "u": "0",
+        "v": "1",
+        "key": 0,
+        "length_m": 110.0,
+        "status": "open",
+        "risk_score": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "R_1_0_0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.2351,
+            13.0418
+          ],
+          [
+            80.2341,
+            13.0418
+          ]
+        ]
+      },
+      "properties": {
+        "id": "R_1_0_0",
+        "source": "synthetic_demo",
+        "name": "Synthetic demo road",
+        "u": "1",
+        "v": "0",
+        "key": 0,
+        "length_m": 110.0,
+        "status": "open",
+        "risk_score": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "R_1_2_0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.2351,
+            13.0418
+          ],
+          [
+            80.2351,
+            13.0428
+          ]
+        ]
+      },
+      "properties": {
+        "id": "R_1_2_0",
+        "source": "synthetic_demo",
+        "name": "Synthetic demo road",
+        "u": "1",
+        "v": "2",
+        "key": 0,
+        "length_m": 110.0,
+        "status": "open",
+        "risk_score": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "R_2_1_0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.2351,
+            13.0428
+          ],
+          [
+            80.2351,
+            13.0418
+          ]
+        ]
+      },
+      "properties": {
+        "id": "R_2_1_0",
+        "source": "synthetic_demo",
+        "name": "Synthetic demo road",
+        "u": "2",
+        "v": "1",
+        "key": 0,
+        "length_m": 110.0,
+        "status": "open",
+        "risk_score": 0.0
+      }
+    }
+  ]
+}

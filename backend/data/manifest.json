@@ -1,0 +1,43 @@
+{
+  "roads": {
+    "classification": "contemporary_osm",
+    "source_organization": "OpenStreetMap contributors",
+    "source_file": "data/raw/Chennai_TNagar_DisasterTwin.osm.gz",
+    "source_generator": "osmium/1.15.0",
+    "source_bounds": {
+      "minlat": "13.0179",
+      "minlon": "80.2046",
+      "maxlat": "13.0492",
+      "maxlon": "80.254"
+    },
+    "coverage": "t_nagar",
+    "crs": "EPSG:4326",
+    "dataset_type": "road_network",
+    "license": "Open Database License (ODbL); OpenStreetMap contributors",
+    "validation": "passed",
+    "nodes": 9502,
+    "edges": 18987,
+    "processing_notes": "Imported from local OSM XML; only nodes referenced by retained drivable segments are kept."
+  },
+  "facilities": {
+    "classification": "synthetic_demo",
+    "source_file": "data/raw/facilities_template.csv",
+    "validation": "template_only"
+  },
+  "rainfall": {
+    "classification": "simulation_event",
+    "validation": "no historical observations loaded"
+  },
+  "flood": {
+    "classification": "synthetic_demo",
+    "validation": "no georeferenced flood layer loaded"
+  },
+  "elevation": {
+    "classification": "synthetic_demo",
+    "validation": "no DEM loaded"
+  },
+  "boundaries": {
+    "classification": "synthetic_demo",
+    "validation": "no official boundary loaded"
+  }
+}

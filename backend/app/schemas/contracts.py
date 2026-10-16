@@ -156,6 +156,54 @@ class TwinStateContract(ContractModel):
     relief_units: list[ReliefUnitContract]
     zones: list[ZoneContract]
 
+    @model_validator(mode="before")
+    @classmethod
+    def adapt_shared_twin_snapshot(cls, value: object) -> object:
+        """Translate the authoritative twin's entity fields into agent contracts."""
+        if not isinstance(value, dict):
+            return value
+        value = dict(value)
+        roads = []
+        for raw in value.get("roads", []):
+            if not isinstance(raw, dict):
+                roads.append(raw)
+                continue
+            road = dict(raw)
+            coordinates = road.get("coordinates")
+            if "geometry" not in road and coordinates is not None:
+                road["geometry"] = {"type": "LineString", "coordinates": coordinates}
+            if road.get("u") is not None:
+                road["source"] = str(road["u"])
+            if road.get("source") in (None, "synthetic_demo", "contemporary_osm", "local_graphml_unverified") and coordinates:
+                road["source"] = f"{coordinates[0][0]},{coordinates[0][1]}"
+            if road.get("v") is not None:
+                road["target"] = str(road["v"])
+            elif "target" not in road:
+                road["target"] = road.get("v")
+            if road.get("target") is None and coordinates:
+                road["target"] = f"{coordinates[-1][0]},{coordinates[-1][1]}"
+            if "distance_m" not in road:
+                road["distance_m"] = road.get("length_m")
+            road["bidirectional"] = road.get("bidirectional", False)
+            roads.append({key: road[key] for key in ("id", "source", "target", "status", "risk_score", "geometry", "distance_m", "bidirectional") if key in road})
+        value["roads"] = roads
+        value["shelters"] = [
+            {key: shelter[key] for key in ("id", "name", "location", "capacity", "occupancy", "demand", "priority", "risk_score", "affected_population") if key in shelter}
+            if isinstance(shelter, dict) else shelter
+            for shelter in value.get("shelters", [])
+        ]
+        value["relief_units"] = [
+            {key: unit[key] for key in ("id", "location", "inventory") if key in unit}
+            if isinstance(unit, dict) else unit
+            for unit in value.get("relief_units", [])
+        ]
+        value["zones"] = [
+            {key: zone[key] for key in ("id", "risk_score", "affected_population") if key in zone}
+            if isinstance(zone, dict) else zone
+            for zone in value.get("zones", [])
+        ]
+        return value
+
 
 class RiskIndicators(ContractModel):
     """Normalized risk observations, where omitted or null values remain missing."""

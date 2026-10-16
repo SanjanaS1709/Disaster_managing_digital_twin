@@ -1,0 +1,117 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "R_1_2_0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.2341,
+            13.0418
+          ],
+          [
+            80.2351,
+            13.0418
+          ]
+        ]
+      },
+      "properties": {
+        "id": "R_1_2_0",
+        "source": "contemporary_osm",
+        "name": "Fixture East Road",
+        "u": "1",
+        "v": "2",
+        "key": 0,
+        "length_m": 111.32000000053154,
+        "status": "open",
+        "risk_score": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "R_2_1_0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.2351,
+            13.0418
+          ],
+          [
+            80.2341,
+            13.0418
+          ]
+        ]
+      },
+      "properties": {
+        "id": "R_2_1_0",
+        "source": "contemporary_osm",
+        "name": "Fixture East Road",
+        "u": "2",
+        "v": "1",
+        "key": 0,
+        "length_m": 111.32000000053154,
+        "status": "open",
+        "risk_score": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "R_2_3_0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.2351,
+            13.0418
+          ],
+          [
+            80.2351,
+            13.0428
+          ]
+        ]
+      },
+      "properties": {
+        "id": "R_2_3_0",
+        "source": "contemporary_osm",
+        "name": "Fixture North Road",
+        "u": "2",
+        "v": "3",
+        "key": 0,
+        "length_m": 111.3199999999383,
+        "status": "open",
+        "risk_score": 0.0
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "R_3_4_0",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            80.2351,
+            13.0428
+          ],
+          [
+            80.2351,
+            13.0438
+          ]
+        ]
+      },
+      "properties": {
+        "id": "R_3_4_0",
+        "source": "contemporary_osm",
+        "name": "Fixture North Road",
+        "u": "3",
+        "v": "4",
+        "key": 0,
+        "length_m": 111.3199999999383,
+        "status": "open",
+        "risk_score": 0.0
+      }
+    }
+  ]
+}
