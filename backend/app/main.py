@@ -14,6 +14,8 @@ from .decisions import decision_manager
 from .models import AgentResponse, ProposedAction, DecisionStatus
 from .live import live_clients
 from .api.agents import router as agents_router
+from .api.assistant import router as assistant_router
+from .api.routes import router as routes_router
 
 
 app = FastAPI(
@@ -22,6 +24,8 @@ app = FastAPI(
     version="0.1.0"
 )
 app.include_router(agents_router)
+app.include_router(assistant_router)
+app.include_router(routes_router)
 
 app.add_middleware(
     CORSMiddleware,

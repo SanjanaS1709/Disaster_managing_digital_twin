@@ -14,3 +14,18 @@
 .supply-list{flex-wrap:wrap;justify-content:flex-end}
 .unit-row{min-height:42px}
 @media(max-width:800px){.shelter-list,.unit-list{max-height:520px}}
+.route-planner{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:9px;align-items:end;padding:13px 15px 10px;border-top:1px solid var(--line)}
+.route-planner label{display:grid;gap:5px;color:var(--muted);font-size:10px}
+.route-planner select{width:100%;min-height:34px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--panel2);color:var(--text);font:inherit}
+.route-pick,.route-actions button{min-height:34px;padding:0 10px;border:1px solid var(--line);border-radius:5px;background:var(--panel2);color:var(--text);font:600 10px var(--font);cursor:pointer}
+.route-pick:hover,.route-clear:hover{border-color:#799188}
+.route-actions{grid-column:1/-1;display:flex;gap:8px}
+.route-suggest{background:#164348!important;border-color:#27818a!important;color:#a1edf0!important}
+.route-actions button:disabled{opacity:.6;cursor:wait}
+.route-result{margin:0 15px 14px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);font-size:11px;line-height:1.55}
+.route-result p{margin:0 0 6px}.route-result p:last-child{margin-bottom:0}.route-summary{font-weight:700;color:var(--cyan)}
+.route-safety{color:var(--amber)}.route-result.error{border-color:#a85055;background:#321e22;color:#ffd5d5}.route-result.loading{color:var(--muted)}
+.route-result details{margin-top:7px}.route-result summary{cursor:pointer;color:var(--cyan)}.route-result ol{max-height:220px;overflow:auto;padding-left:22px;margin:7px 0 0}.route-result li{padding:2px 0}
+.route-candidates{padding-left:24px!important}.route-candidates button{padding:4px 6px;border:0;background:transparent;color:var(--cyan);font:inherit;text-align:left;cursor:pointer}.route-candidates button:hover{text-decoration:underline}
+.route-pick-cursor{cursor:crosshair!important}
+@media(max-width:650px){.route-planner{grid-template-columns:minmax(0,1fr) auto;gap:8px}.route-planner label{grid-column:1}.route-pick{grid-column:2;grid-row:auto}.route-actions{grid-column:1/-1}.route-actions button{flex:1}}

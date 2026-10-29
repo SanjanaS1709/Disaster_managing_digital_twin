@@ -8,3 +8,7 @@ shapely
 networkx
 pyproj
 firebase-admin>=6,<8
+groq>=0.11,<2
+langgraph>=0.2,<2
+python-dotenv>=1,<2
+httpx>=0.27,<1

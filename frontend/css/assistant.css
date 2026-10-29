@@ -1,0 +1,24 @@
+﻿.assistant-panel{grid-column:1/-1;margin-top:14px;padding:0;overflow:hidden;scroll-margin-top:20px}
+.assistant-header{align-items:center}.assistant-header .panel-title{gap:9px}.assistant-header .panel-icon{display:grid;place-items:center;width:27px;height:27px;font:700 9px var(--mono)}
+.assistant-clear{padding:7px 10px;border:1px solid var(--line);border-radius:5px;background:var(--panel2);color:var(--muted);font:600 9px var(--mono);cursor:pointer}.assistant-clear:hover{color:var(--text);border-color:var(--cyan)}
+.assistant-safety{margin:0 14px 12px;padding:9px 11px;border:1px solid #826d38;border-radius:5px;background:#292315;color:#e5ca88;font-size:10px;line-height:1.5}
+.assistant-messages{display:grid;gap:9px;max-height:380px;min-height:150px;margin:0 14px;padding:12px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel2);scroll-behavior:smooth}
+.assistant-message{width:min(88%,760px);padding:10px 12px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--text)}.assistant-message-user{justify-self:end;border-color:#405c62;background:#18272b}.assistant-message-bot{justify-self:start}.assistant-message>b{display:block;margin-bottom:5px;color:var(--cyan);font:600 9px var(--mono);letter-spacing:.3px}.assistant-message-user>b{color:#b6a4ff}.assistant-message p{margin:0;color:inherit;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.assistant-message-error{border-color:#75464a;background:#2a1d20}.assistant-message-error>b{color:#f09b9e}.assistant-message-loading p{color:var(--muted);animation:assistant-pulse 1s ease-in-out infinite alternate}.assistant-message-notice{margin-top:8px!important;padding-top:7px;border-top:1px solid #75653b;color:#f1d58f!important;font-size:10px!important}.assistant-sources{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0 0;padding-left:18px;font-size:10px}.assistant-sources a{color:var(--cyan)}
+.assistant-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin:11px 14px}.assistant-suggestions button{padding:6px 9px;border:1px solid var(--line);border-radius:20px;background:var(--panel2);color:var(--muted);font:9px var(--font);text-align:left;cursor:pointer}.assistant-suggestions button:hover{border-color:var(--cyan);color:var(--text)}
+.assistant-compose{display:flex;align-items:stretch;gap:8px;margin:0 14px}.assistant-compose textarea{flex:1;min-width:0;resize:vertical;min-height:44px;max-height:140px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--text);font:12px var(--font);line-height:1.5}.assistant-compose textarea:focus{outline:2px solid #62c6d155;border-color:var(--cyan)}.assistant-compose button{min-width:76px;padding:0 14px;border:1px solid #418e91;border-radius:6px;background:#16464b;color:#e6ffff;font:600 10px var(--mono);cursor:pointer}.assistant-compose button:disabled{opacity:.55;cursor:wait}.assistant-status{min-height:31px;padding:8px 14px 10px;color:var(--muted);font-size:9px;line-height:1.5}.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@keyframes assistant-pulse{from{opacity:.45}to{opacity:1}}
+@media(max-width:600px){.assistant-panel{margin-top:10px}.assistant-header{align-items:flex-start;gap:8px}.assistant-header .panel-title{flex-wrap:wrap}.assistant-clear{font-size:8px}.assistant-safety{font-size:9px}.assistant-messages{max-height:55vh;min-height:130px;margin:0 9px;padding:8px}.assistant-message{width:96%;padding:9px}.assistant-message p{font-size:11px}.assistant-suggestions,.assistant-compose{margin-left:9px;margin-right:9px}.assistant-suggestions{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.assistant-suggestions button{flex:0 0 auto;max-width:88vw}.assistant-compose button{min-width:62px;padding:0 10px}}
+.assistant-message{color:#25343a;background:#fff;border-color:#d7e0e2}
+.assistant-message p{color:#25343a}
+.assistant-message-user{color:#18383c;background:#e7f5f3;border-color:#badbd8}
+.assistant-message-user p{color:#18383c}
+.assistant-message>b{color:#167a83}
+.assistant-message-user>b{color:#6752a8}
+.assistant-message-loading p{color:#64777b}
+.assistant-message-error{color:#572d32;background:#fff0f0;border-color:#e6bfc1}
+.assistant-message-error p,.assistant-message-error>b{color:#8f3540}
+.assistant-message-notice{color:#694b08!important;border-color:#e4cf92;background:#fff8df}
+.assistant-suggestions button,.assistant-clear{color:#405158;background:#fff}
+.assistant-compose textarea{color:#24343a;background:#fff}
+.assistant-compose textarea::placeholder{color:#718186;opacity:1}
+.assistant-status{color:#65757a}

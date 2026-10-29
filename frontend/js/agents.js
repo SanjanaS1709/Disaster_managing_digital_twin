@@ -88,7 +88,15 @@ function agentExplanation(key, result) {
   return 'This check is complete.';
 }
 
-export function renderAgentEvaluation(result, twinState) {
+function routeForProposal(result, proposal) {
+  return (result.routing_result || []).find(route =>
+    route.unit_id === proposal.unit_id &&
+    route.shelter_id === proposal.shelter_id &&
+    route.result?.reachable,
+  );
+}
+
+export function renderAgentEvaluation(result, twinState, onShowRoute = () => {}) {
   const panel = document.querySelector('.agent-panel');
   const list = panel.querySelector('.agent-list');
   const status = panel.querySelector('.offline-badge, .agent-status');
@@ -128,6 +136,8 @@ export function renderAgentEvaluation(result, twinState) {
       const unitName = unit?.name || `Relief unit ${proposal.unit_id}`;
       const shelterName = shelter?.name || `Shelter ${proposal.shelter_id}`;
       const unitNameWithId = unit ? `${unitName} (${proposal.unit_id})` : unitName;
+      const route = routeForProposal(result, proposal);
+      const routeCoordinates = route?.result?.route_geometry?.coordinates;
       const card = document.createElement('article'); card.className = 'agent-proposal';
       const supply = proposal.item === 'food'
         ? `${proposal.quantity} food packs`
@@ -136,8 +146,20 @@ export function renderAgentEvaluation(result, twinState) {
           : `${proposal.quantity} ${proposal.item}`;
       card.append(textNode('b', 'agent-proposal-title', `Suggest sending ${supply} to ${shelterName}`));
       card.append(textNode('span', '', `From ${unitNameWithId}`));
+      if (proposal.route_road_ids?.length) {
+        const routeButton = textNode('button', 'agent-route-button', 'Show suggested route');
+        routeButton.type = 'button';
+        routeButton.addEventListener('click', () => onShowRoute(proposal.route_road_ids, unit?.location, routeCoordinates));
+        card.append(routeButton);
+      }
       card.append(textNode('small', '', 'This is a suggestion only. No delivery has been made.'));
       resultBox.append(card);
+    }
+    const firstRoutableProposal = proposals.find(proposal => proposal.route_road_ids?.length);
+    if (firstRoutableProposal) {
+      const unit = units.get(firstRoutableProposal.unit_id);
+      const route = routeForProposal(result, firstRoutableProposal);
+      onShowRoute(firstRoutableProposal.route_road_ids, unit?.location, route?.result?.route_geometry?.coordinates);
     }
   }
   if (result.requires_approval) {

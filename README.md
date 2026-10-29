@@ -79,9 +79,38 @@ py -m venv .venv
 python -m pip install -r backend\requirements.txt
 ```
 
-The `.env.example` file contains placeholders only. Copy it to `.env` and
-provide locally managed `GROQ_API_KEY` and `GROQ_MODEL` values for optional
-interpretation and explanation. Never commit credentials.
+The `.env.example` file contains placeholders only. Copy it to `.env` and set
+locally managed `GROQ_API_KEY` and `GROQ_MODEL` values for optional agent
+interpretation, decision explanations, and the AI Disaster Response Assistant.
+The suggested Groq model is `openai/gpt-oss-120b`; set a model available to your
+Groq account in `.env`. Never commit credentials.
+
+The dashboard includes a chat assistant at **AI Disaster Response Assistant**.
+It reads dashboard context directly from the backend and labels simulation data
+as simulated. It cannot provide live alerts, confirm road safety, or dispatch
+resources. The assistant endpoint is `POST /api/assistant/chat`; chat sessions
+are kept in backend memory and reset when the backend restarts. No verified
+document retrieval is configured yet, so the assistant does not return source
+citations.
+
+## Suggested road routes
+
+The map's **Suggest route** control calls the backend OSRM integration, which
+returns a GeoJSON road route, distance, estimated time, and turn instructions.
+Use **Rank shelters** to compare candidate shelters by mapped road distance and
+estimated travel time, then select a candidate and draw its route. Origins and
+destinations can also be picked directly on the map. Coordinates sent to the
+backend use `[longitude, latitude]` order.
+
+The default routing host is the public OSRM demo service. Set `OSRM_BASE_URL`
+in the repository `.env` file to use a compatible self-hosted service. The
+current simulated road status and rainfall are not connected to OSRM, so every
+route is marked as not verified for disaster safety.
+
+To run the local dashboard, start FastAPI from `backend` with
+`python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`, then serve the
+`frontend` directory on port `5500` (for example,
+`python -m http.server 5500 --directory frontend` from the repository root).
 
 ## Deterministic agent tests
 

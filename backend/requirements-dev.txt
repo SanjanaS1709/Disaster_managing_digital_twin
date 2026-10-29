@@ -1,4 +1,5 @@
 -r requirements.txt
 httpx>=0.27,<1
+pytest>=8,<9
 # Optional local .osm.pbf parsing (XML .osm import needs no extra package)
 # pyosmium>=4.0
