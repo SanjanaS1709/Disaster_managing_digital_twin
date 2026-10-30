@@ -3,6 +3,7 @@ uvicorn[standard]
 pydantic>=2.10,<3
 tzdata
 osmnx>=2,<3
+scikit-learn>=1.4,<2
 geopandas
 shapely
 networkx

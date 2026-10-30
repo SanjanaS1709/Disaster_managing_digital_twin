@@ -9,6 +9,10 @@ import os
 import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+import networkx as nx
+
+from ..state_manager import state_manager
+from ..road_loader import routing_graph
 
 router = APIRouter(prefix="/api/routes", tags=["routes"])
 logger = logging.getLogger(__name__)
@@ -74,6 +78,14 @@ def _valid_metric(value: object) -> bool:
     return isinstance(value, (int, float)) and math.isfinite(value) and value >= 0
 
 
+def _distance_m(a: list[float], b: list[float]) -> float:
+    lon1, lat1 = map(math.radians, a)
+    lon2, lat2 = map(math.radians, b)
+    dlat, dlon = lat2 - lat1, lon2 - lon1
+    h = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+    return 6_371_008.8 * 2 * math.asin(math.sqrt(h))
+
+
 def _valid_geometry(geometry: object) -> bool:
     if not isinstance(geometry, dict) or geometry.get("type") != "LineString":
         return False
@@ -88,8 +100,62 @@ def _valid_geometry(geometry: object) -> bool:
     )
 
 
+def _weather_aware_route(origin: list[float], destination: list[float], state=None) -> dict:
+    """Route on the local OSM graph after weather events have closed roads."""
+    state = state or state_manager.get_state()
+    graph = routing_graph(state)
+    if not graph.number_of_nodes():
+        raise HTTPException(status_code=404, detail="No traversable roads remain in the simulated area.")
+    graph.remove_nodes_from(list(nx.isolates(graph)))
+    if not graph.number_of_nodes():
+        raise HTTPException(status_code=404, detail="No traversable roads remain in the simulated area.")
+    try:
+        import osmnx as ox
+        start = ox.distance.nearest_nodes(graph, origin[0], origin[1])
+        end = ox.distance.nearest_nodes(graph, destination[0], destination[1])
+        nodes = nx.shortest_path(graph, start, end, weight=lambda u, v, data: min(
+            edge['length'] * (1 + 5 * edge.get('risk_score', 0)) for edge in data.values()
+        ))
+    except ImportError as error:
+        if 'scikit-learn' in str(error):
+            raise HTTPException(
+                status_code=503,
+                detail='Weather-aware routing requires scikit-learn. Install backend requirements and restart FastAPI.',
+            ) from None
+        raise
+    except (nx.NetworkXNoPath, nx.NodeNotFound, ValueError):
+        raise HTTPException(status_code=404, detail="No route avoids the roads blocked by simulated weather.") from None
+    coordinates = [origin]
+    distance = 0.0
+    for u, v in zip(nodes, nodes[1:]):
+        options = graph.get_edge_data(u, v)
+        edge = min(options.values(), key=lambda item: item['length'] * (1 + 5 * item.get('risk_score', 0)))
+        points = list(edge['geometry'].coords)
+        if points[0] != (graph.nodes[u]['x'], graph.nodes[u]['y']):
+            points.reverse()
+        coordinates.extend([list(point) for point in points[1:]])
+        distance += edge['length']
+    coordinates.append(destination)
+    start_coordinate = [graph.nodes[start]['x'], graph.nodes[start]['y']]
+    end_coordinate = [graph.nodes[end]['x'], graph.nodes[end]['y']]
+    route_distance = distance + _distance_m(origin, start_coordinate) + _distance_m(destination, end_coordinate)
+    return {
+        "origin": {"coordinates": origin, "label": "Selected point"},
+        "destination": {"coordinates": destination, "label": "Selected point"},
+        "route": {"geometry": {"type": "LineString", "coordinates": coordinates},
+                  "distance_m": route_distance, "duration_s": route_distance / 8.3,
+                  "steps": [{"instruction": "Follow the weather adjusted mapped road route", "distance_m": route_distance, "duration_s": route_distance / 8.3}]},
+        "alternatives_count": 0, "safety_status": "simulated_road_avoidance",
+        "safety_message": "Route avoids blocked roads and penalizes restricted roads in this simulation. Conditions are simulated and do not verify real-world safety.",
+        "source": "Local OpenStreetMap road graph and simulated road status",
+    }
+
+
 @router.post("/calculate")
 async def calculate_route(body: RouteRequest) -> dict:
+    state = state_manager.get_state()
+    if any(road.status != "open" for road in state.roads):
+        return _weather_aware_route(body.origin.coordinates, body.destination.coordinates, state)
     base_url = os.getenv("OSRM_BASE_URL", "https://router.project-osrm.org").strip().rstrip("/")
     if not base_url.startswith(("https://", "http://")):
         raise HTTPException(status_code=500, detail="OSRM_BASE_URL must be an http(s) URL")

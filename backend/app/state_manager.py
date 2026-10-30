@@ -44,12 +44,11 @@ class StateManager:
         self._restore()
 
     def _state_document(self, state: TwinState) -> dict:
-        document = state.model_dump(mode="json")
         if not getattr(self._store, "compact_roads", False):
-            return document
+            return state.model_dump(mode="json")
+        document = state.model_dump(mode="json", exclude={"roads"})
         document["road_states"] = {road.id: {"status": road.status, "risk_score": road.risk_score}
                                    for road in state.roads if road.status != "open" or road.risk_score != 0}
-        document.pop("roads")
         return document
 
     def _run_document(self, r: Run) -> dict:

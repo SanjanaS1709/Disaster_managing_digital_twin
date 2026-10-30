@@ -141,6 +141,7 @@ class ZoneContract(ContractModel):
     """Zone-level risk and population observations."""
 
     id: str = Field(min_length=1)
+    location: Coordinate | None = None
     risk_score: float = Field(ge=0, le=1, allow_inf_nan=False)
     affected_population: StrictInt = Field(ge=0)
 
@@ -198,7 +199,7 @@ class TwinStateContract(ContractModel):
             for unit in value.get("relief_units", [])
         ]
         value["zones"] = [
-            {key: zone[key] for key in ("id", "risk_score", "affected_population") if key in zone}
+            {key: zone[key] for key in ("id", "location", "risk_score", "affected_population") if key in zone}
             if isinstance(zone, dict) else zone
             for zone in value.get("zones", [])
         ]

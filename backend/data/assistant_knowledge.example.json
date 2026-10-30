@@ -1,0 +1,26 @@
+[
+  {
+    "id": "india-emergency-number-112",
+    "title": "Emergency assistance in India",
+    "content": "India's Emergency Response Support System uses 112 as a pan-India emergency number for police, fire and rescue, health, and other emergency assistance. This assistant cannot place an emergency call or contact responders.",
+    "keywords": ["india", "emergency", "112", "number", "police", "fire", "rescue", "health", "ambulance", "urgent", "help"],
+    "source_title": "Emergency Response Support System in India",
+    "source_url": "https://112.gov.in/",
+    "reviewed": true,
+    "reviewed_by": "implementation-source-review",
+    "reviewed_at": "2026-10-30",
+    "active": true
+  },
+  {
+    "id": "ndma-sachet-official-alerts",
+    "title": "Finding official disaster alerts in India",
+    "content": "The NDMA SACHET portal provides official, geo-targeted disaster alerts and links to alert information from authorized sources. Check the portal or follow local authorities for current alerts. This dashboard is a simulation and is not connected to SACHET or a live alert feed.",
+    "keywords": ["india", "ndma", "sachet", "official", "alert", "alerts", "warning", "warnings", "current", "live", "authority", "authorities"],
+    "source_title": "NDMA SACHET National Disaster Alert Portal",
+    "source_url": "https://sachet.ndma.gov.in/",
+    "reviewed": true,
+    "reviewed_by": "implementation-source-review",
+    "reviewed_at": "2026-10-30",
+    "active": true
+  }
+]

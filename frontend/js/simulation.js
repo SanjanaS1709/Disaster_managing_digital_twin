@@ -109,7 +109,7 @@ export function configureEventForm(state) {
     return control;
   };
   if (eventType === 'ROAD_FLOODED') {
-    field('Reported severity', select('event-risk-level', [['0.25', 'Low'], ['0.5', 'Moderate'], ['0.75', 'High'], ['1', 'Very high']]), 'This records the road condition in the simulation. A separate danger estimate needs measured warning information.');
+    field('Reported severity', select('event-risk-level', [['0.25', 'Low'], ['0.5', 'Moderate'], ['0.75', 'High'], ['1', 'Very high']]), 'Impact radius: Low restricts roads within 250 m; Moderate blocks within 250 m and restricts to 800 m; High uses 600 m / 1.5 km; Very high uses 1 km / 2.5 km.');
   } else if (eventType === 'ROAD_REOPENED') {
     field('Road condition', select('event-road-status', [['open', 'Open to traffic'], ['restricted', 'Limited access']]));
     field('Remaining danger level', select('event-risk-level', [['0.1', 'Low'], ['0.3', 'Moderate'], ['0.6', 'High']]), 'Choose the reported danger level after reopening.');
@@ -134,8 +134,12 @@ export function configureEventForm(state) {
       document.getElementById('event-shortage-unit').textContent = `Amount is measured in ${selected?.inventory_units?.[chosen] || 'the listed unit'}.`;
     });
   } else if (eventType === 'RAINFALL_INCREASE') {
-    field('Reported rainfall', number('event-rainfall', 25), 'Enter the new measured rainfall. Use the same unit as the previous report for this zone.');
-    field('Measurement unit', select('event-rainfall-unit', [['mm/hour', 'Millimetres per hour'], ['mm', 'Millimetres']]));
+    const latest = selected?.rainfall?.at(-1);
+    const unit = latest?.unit || 'mm/hour';
+    field('Simulated rainfall', number('event-rainfall', latest ? Math.ceil(latest.value + 10) : 40), 'Higher rainfall blocks roads closest to this zone and restricts roads farther out. Enter a value above the latest reading for this unit. This is a scenario rule, not a flood forecast.');
+    const units = select('event-rainfall-unit', [['mm/hour', 'Millimetres per hour'], ['mm', 'Millimetres']]);
+    units.value = unit;
+    field('Measurement unit', units);
   }
 }
 

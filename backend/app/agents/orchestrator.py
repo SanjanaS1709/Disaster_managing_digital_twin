@@ -16,6 +16,7 @@ from app.agents import perception as perception_agent
 from app.agents import risk as risk_agent
 from app.agents import routing as routing_agent
 from app.agents.decision_explainer import explain_validated_decision
+from app.simulation import rainfall_severity, road_weather_impact
 from app.schemas.contracts import (
     AllocationResult,
     AllocationProposal,
@@ -280,14 +281,31 @@ def _planning_roads(
     projected = [copy.deepcopy(road.model_dump()) for road in twin.roads]
     if event.type == "ROAD_REOPENED" and not evidence_verified:
         return projected
-    if event.type not in {"ROAD_FLOODED", "ROAD_REOPENED"}:
-        return projected
-    for road in projected:
-        if road["id"] == event.target_id:
-            road["status"] = "blocked" if event.type == "ROAD_FLOODED" else "open"
-            if risk_result.risk_score is not None:
-                road["risk_score"] = risk_result.risk_score
-            break
+    if event.type == "ROAD_FLOODED":
+        target = next((road for road in projected if road["id"] == event.target_id), None)
+        if target is not None:
+            coordinates = target["geometry"]["coordinates"]
+            center = coordinates[len(coordinates) // 2]
+            updates = road_weather_impact(projected, center, event.payload["risk_score"], event.target_id)
+            for road in projected:
+                if road["id"] in updates:
+                    road.update(updates[road["id"]])
+    elif event.type == "ROAD_REOPENED":
+        for road in projected:
+            if road["id"] == event.target_id:
+                road["status"] = event.payload["status"]
+                road["risk_score"] = event.payload["risk_score"]
+                break
+    elif event.type == "RAINFALL_INCREASE":
+        zone = next((item for item in twin.zones if item.id == event.target_id), None)
+        if zone is not None and zone.location is not None:
+            updates = road_weather_impact(
+                projected, zone.location,
+                rainfall_severity(event.payload["value"], event.payload["unit"]),
+            )
+            for road in projected:
+                if road["id"] in updates:
+                    road.update(updates[road["id"]])
     return projected
 
 
@@ -334,6 +352,11 @@ def routing_node(state: WorkflowState) -> dict[str, object]:
             state["risk_result"],
             state.get("evidence_verified", False),
         )
+        route_graph = routing_agent.build_road_graph(
+            roads, risk_weight=state.get("routing_risk_weight", 5.0)
+        )
+        shortest_path_cache = {}
+        location_snap_cache = {}
         routes = [
             WorkflowRoute(
                 unit_id=unit.id,
@@ -343,6 +366,10 @@ def routing_node(state: WorkflowState) -> dict[str, object]:
                     unit.location,
                     shelter.location,
                     risk_weight=state.get("routing_risk_weight", 5.0),
+                    prebuilt_graph=route_graph,
+                    shortest_path_cache=shortest_path_cache,
+                    snap_locations=True,
+                    location_snap_cache=location_snap_cache,
                 ),
             )
             for unit in state["validated_twin"].relief_units

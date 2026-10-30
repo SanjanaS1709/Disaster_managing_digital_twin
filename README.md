@@ -88,24 +88,51 @@ Groq account in `.env`. Never commit credentials.
 The dashboard includes a chat assistant at **AI Disaster Response Assistant**.
 It reads dashboard context directly from the backend and labels simulation data
 as simulated. It cannot provide live alerts, confirm road safety, or dispatch
-resources. The assistant endpoint is `POST /api/assistant/chat`; chat sessions
-are kept in backend memory and reset when the backend restarts. No verified
-document retrieval is configured yet, so the assistant does not return source
-citations.
+resources. The assistant endpoint is `POST /api/assistant/chat`. By default,
+assistant history is held in backend memory. To enable durable sessions and
+reviewed guidance retrieval, set `ASSISTANT_STORAGE_BACKEND=firestore` in the
+repository `.env`, set `FIREBASE_PROJECT_ID`, and provide either
+`FIREBASE_SERVICE_ACCOUNT_JSON` (a secured file path outside the repository) or
+Application Default Credentials. Firestore uses the same collection and
+namespace as the twin, under `assistant_data/sessions/items` and
+`assistant_data/knowledge/documents`.
+
+The UI keeps the opaque session ID in tab-scoped `sessionStorage`, restores the
+last saved messages after reload, and deletes the stored session when **Clear
+conversation** is used. Sessions carry a 30-day `expires_at`; configure a
+Firestore TTL policy on that field for automatic cleanup. Without the TTL
+policy, expired history is deleted when that session is next read.
+
+Knowledge is never created from chat messages. Maintain reviewed JSON records
+using the schema in `backend/data/assistant_knowledge.example.json`, then import
+them with:
+
+```powershell
+python backend/scripts/import_assistant_knowledge.py backend/data/assistant_knowledge.example.json
+```
+
+Only records marked `reviewed: true`, active, schema-valid, and linked to an
+HTTP(S) source are retrieved. The assistant returns the retrieved source links
+with its answer. Retrieval uses keyword overlap over a small cached set of
+reviewed records; it does not use semantic embeddings. Firestore mode requires
+working Firebase credentials and Firestore access. The endpoint does not add
+user authentication, so deploy it only behind appropriate access controls and
+avoid storing sensitive personal details.
 
 ## Suggested road routes
 
-The map's **Suggest route** control calls the backend OSRM integration, which
-returns a GeoJSON road route, distance, estimated time, and turn instructions.
-Use **Rank shelters** to compare candidate shelters by mapped road distance and
-estimated travel time, then select a candidate and draw its route. Origins and
-destinations can also be picked directly on the map. Coordinates sent to the
-backend use `[longitude, latitude]` order.
+The map's **Suggest route** control returns a GeoJSON road route, distance,
+estimated time, and directions. With an all-open network it uses OSRM. After a
+simulation marks roads restricted or blocked, it routes over the local OSM graph,
+avoids blocked roads, and penalizes restricted roads. **Rank shelters** compares
+mapped road distance and estimated travel time. Origins and destinations can
+also be picked directly on the map. Coordinates use `[longitude, latitude]`.
 
-The default routing host is the public OSRM demo service. Set `OSRM_BASE_URL`
-in the repository `.env` file to use a compatible self-hosted service. The
-current simulated road status and rainfall are not connected to OSRM, so every
-route is marked as not verified for disaster safety.
+The default routing host is the public OSRM demo service for the all-open
+baseline. Set `OSRM_BASE_URL` in the repository `.env` file to use a compatible
+self-hosted service. Simulated rainfall and flood severity change nearby road
+statuses in the twin; they do not represent live measurements or verify actual
+road safety. Select **New run** to start again with all roads open.
 
 To run the local dashboard, start FastAPI from `backend` with
 `python -m uvicorn app.main:app --host 127.0.0.1 --port 8000`, then serve the

@@ -55,7 +55,7 @@ def evaluate_agents(request: AgentEvaluationRequest | DisasterEvent) -> Workflow
                 for unit in state.relief_units
             ],
             "zones": [
-                {"id": zone.id, "risk_score": zone.risk_score,
+                {"id": zone.id, "location": zone.location, "risk_score": zone.risk_score,
                  "affected_population": zone.affected_population}
                 for zone in state.zones
             ],

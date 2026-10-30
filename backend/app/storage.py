@@ -8,7 +8,34 @@ from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
 
+def create_firestore_client(project_id=None, service_account_json=None):
+    """Return the shared Firebase Admin Firestore client for this project."""
+    import firebase_admin
+    from firebase_admin import credentials, firestore
+    if not project_id:
+        raise RuntimeError('FIREBASE_PROJECT_ID is required for Firestore')
+    name = 'module1-' + hashlib.sha256((project_id + (service_account_json or '')).encode()).hexdigest()[:16]
+    try:
+        app = firebase_admin.get_app(name)
+    except ValueError:
+        if os.getenv('FIRESTORE_EMULATOR_HOST'):
+            from google.auth.credentials import AnonymousCredentials
+            class EmulatorCredential(credentials.Base):
+                def get_credential(self):
+                    return AnonymousCredentials()
+            credential = EmulatorCredential()
+        else:
+            # This variable is a secure file PATH, never inline private-key JSON.
+            credential = credentials.Certificate(service_account_json) if service_account_json else credentials.ApplicationDefault()
+        app = firebase_admin.initialize_app(credential, {'projectId': project_id}, name=name)
+    return firestore.client(app=app)
+
+
 class LocalStore:
+    # Road geometry is immutable and loaded from the local GraphML network.
+    # Persist only dynamic road status/risk overlays, as FirestoreStore does.
+    compact_roads = True
+
     def __init__(self, path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -55,25 +82,7 @@ class FirestoreStore:
         if client is not None:
             self.client = client
             return
-        import firebase_admin
-        from firebase_admin import credentials, firestore
-        if not project_id:
-            raise RuntimeError('FIREBASE_PROJECT_ID is required for Firestore')
-        name = 'module1-' + hashlib.sha256((project_id + (service_account_json or '')).encode()).hexdigest()[:16]
-        try:
-            app = firebase_admin.get_app(name)
-        except ValueError:
-            if os.getenv('FIRESTORE_EMULATOR_HOST'):
-                from google.auth.credentials import AnonymousCredentials
-                class EmulatorCredential(credentials.Base):
-                    def get_credential(self):
-                        return AnonymousCredentials()
-                credential = EmulatorCredential()
-            else:
-                # This variable is a secure file PATH, never inline private-key JSON.
-                credential = credentials.Certificate(service_account_json) if service_account_json else credentials.ApplicationDefault()
-            app = firebase_admin.initialize_app(credential, {'projectId': project_id}, name=name)
-        self.client = firestore.client(app=app)
+        self.client = create_firestore_client(project_id, service_account_json)
 
     def _root(self):
         return self.client.collection(self.collection).document(self.namespace)
@@ -134,5 +143,5 @@ def configured_store(storage_path, namespace='simulation'):
         return FirestoreStore(project_id=os.getenv('FIREBASE_PROJECT_ID'),
                               service_account_json=os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON') or None,
                               collection=os.getenv('FIRESTORE_COLLECTION', 'agentic_disaster_twin'),
-                              namespace=namespace)
+                              namespace=os.getenv('FIRESTORE_NAMESPACE', namespace))
     raise RuntimeError('SIMULATION_STORAGE_BACKEND must be local or firestore')

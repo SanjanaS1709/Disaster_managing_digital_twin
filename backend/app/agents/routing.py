@@ -2,8 +2,8 @@
 
 Roads are directed from ``source`` to optional ``target``; reverse travel is
 added only when ``bidirectional`` is explicitly true. Coordinate locations map
-only to exact road endpoint coordinates, never to a nearby node. Missing
-connectivity is omitted rather than inferred.
+to exact road endpoints by default; callers may opt into bounded snapping to a
+nearby connected node. Missing connectivity is omitted rather than inferred.
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from app.schemas.contracts import Coordinate, GeoJSONLineString, RoadContract, R
 RoadData: TypeAlias = RoadContract | Mapping[str, object]
 Location: TypeAlias = str | Coordinate | list[float]
 EARTH_RADIUS_METERS = 6_371_008.8
+DEFAULT_MAX_SNAP_DISTANCE_M = 1_500.0
 
 
 @dataclass(frozen=True)
@@ -165,17 +166,91 @@ def _resolve_location(
     return matches[0], None
 
 
+def _nearest_connected_node(
+    location: Coordinate,
+    road_graph: RoadGraph,
+    max_distance_m: float,
+    endpoint: str,
+) -> tuple[str | None, float | None]:
+    """Snap an asset coordinate to a nearby node with traversable graph edges."""
+    candidates = (
+        (node_id, coordinate)
+        for node_id, coordinate in road_graph.node_coordinates.items()
+        if node_id in road_graph.graph
+        and (
+            road_graph.graph.out_degree(node_id) > 0
+            if endpoint == "source"
+            else road_graph.graph.in_degree(node_id) > 0
+        )
+    )
+    nearest = min(
+        (
+            (_haversine_distance([location, coordinate]), node_id)
+            for node_id, coordinate in candidates
+        ),
+        default=None,
+    )
+    if nearest is None or nearest[0] > max_distance_m:
+        return None, None
+    return nearest[1], nearest[0]
+
+
 def route_between(
     roads: Sequence[RoadData],
     source: Location,
     target: Location,
     risk_weight: float = 5.0,
+    *,
+    prebuilt_graph: RoadGraph | None = None,
+    shortest_path_cache: dict | None = None,
+    snap_locations: bool = False,
+    max_snap_distance_m: float = DEFAULT_MAX_SNAP_DISTANCE_M,
+    location_snap_cache: dict | None = None,
 ) -> RouteResult:
     """Return the minimum-cost connected path, or an explicit unreachable result."""
-    road_graph = build_road_graph(roads, risk_weight=risk_weight)
+    # Workflow evaluation routes many unit/shelter pairs over the same snapshot.
+    # Reuse one validated graph instead of parsing the entire OSM network per pair.
+    road_graph = prebuilt_graph or build_road_graph(roads, risk_weight=risk_weight)
     graph = road_graph.graph
     source_node, source_error = _resolve_location(source, road_graph)
     target_node, target_error = _resolve_location(target, road_graph)
+    source_coordinate = target_coordinate = None
+    source_connector_m = target_connector_m = 0.0
+    if snap_locations:
+        for location, error, label in (
+            (source, source_error, "source"),
+            (target, target_error, "target"),
+        ):
+            if error is None or isinstance(location, str):
+                continue
+            try:
+                coordinate = GeoJSONLineString(coordinates=[location, location]).coordinates[0]
+            except (TypeError, ValidationError):
+                continue
+            cache_key = (tuple(coordinate), label)
+            cached = location_snap_cache.get(cache_key) if location_snap_cache is not None else None
+            snapped = cached if cached is not None else _nearest_connected_node(
+                coordinate, road_graph, max_snap_distance_m, label
+            )
+            if location_snap_cache is not None and cached is None:
+                location_snap_cache[cache_key] = snapped
+            snapped_node, connector_m = snapped
+            if snapped_node is None:
+                snap_error = (
+                    f"{label} coordinate {coordinate!r} has no connected road node "
+                    f"within {max_snap_distance_m:.0f} m"
+                )
+                if label == "source":
+                    source_error = snap_error
+                else:
+                    target_error = snap_error
+                continue
+            if label == "source":
+                source_node, source_error = snapped_node, None
+                source_coordinate, source_connector_m = coordinate, connector_m or 0.0
+            else:
+                target_node, target_error = snapped_node, None
+                target_coordinate, target_connector_m = coordinate, connector_m or 0.0
     source_label = source_node or _location_label(source)
     target_label = target_node or _location_label(target)
 
@@ -189,18 +264,32 @@ def route_between(
     assert source_node is not None and target_node is not None
 
     if source_node == target_node:
+        coordinates = [road_graph.node_coordinates[source_node]]
+        if source_coordinate is not None:
+            coordinates.insert(0, source_coordinate)
+        if target_coordinate is not None:
+            coordinates.append(target_coordinate)
         return RouteResult(
             reachable=True,
             source=source_node,
             target=target_node,
             nodes=[source_node],
             road_ids=[],
-            route_geometry=None,
-            total_cost=0.0,
+            route_geometry=GeoJSONLineString(coordinates=coordinates) if len(coordinates) >= 2 else None,
+            total_cost=source_connector_m + target_connector_m,
         )
 
     try:
-        nodes = nx.dijkstra_path(graph, source_node, target_node, weight="cost")
+        if shortest_path_cache is None:
+            nodes = nx.dijkstra_path(graph, source_node, target_node, weight="cost")
+        else:
+            if source_node not in shortest_path_cache:
+                shortest_path_cache[source_node] = nx.single_source_dijkstra(
+                    graph, source_node, weight="cost"
+                )
+            nodes = shortest_path_cache[source_node][1].get(target_node)
+            if nodes is None:
+                raise nx.NetworkXNoPath
     except (nx.NetworkXNoPath, nx.NodeNotFound):
         return RouteResult(
             reachable=False,
@@ -210,8 +299,8 @@ def route_between(
         )
 
     road_ids: list[str] = []
-    merged_coordinates: list[Coordinate] = []
-    total_cost = 0.0
+    merged_coordinates: list[Coordinate] = [source_coordinate] if source_coordinate is not None else []
+    total_cost = source_connector_m + target_connector_m
     for edge_source, edge_target in zip(nodes, nodes[1:]):
         edge_options = graph.get_edge_data(edge_source, edge_target)
         if not edge_options:
@@ -228,6 +317,9 @@ def route_between(
         if merged_coordinates and merged_coordinates[-1] == edge_coordinates[0]:
             edge_coordinates = edge_coordinates[1:]
         merged_coordinates.extend(edge_coordinates)
+
+    if target_coordinate is not None and merged_coordinates[-1] != target_coordinate:
+        merged_coordinates.append(target_coordinate)
 
     route_geometry = GeoJSONLineString(coordinates=merged_coordinates)
     return RouteResult(

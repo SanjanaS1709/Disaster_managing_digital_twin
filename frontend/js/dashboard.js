@@ -139,7 +139,7 @@ function renderStatus(state, status, events) {
   const hero = document.querySelector('.hero-status');
   if (hero) {
     hero.querySelector('b').textContent = status.phase === 'running' ? 'Run is active' : status.phase === 'paused' ? 'Run is paused' : 'Ready to begin';
-    hero.querySelector('span:last-child').textContent = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(state.timestamp));
+    hero.querySelector(':scope > div:last-child > span').textContent = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(state.timestamp));
   }
   const labels = [document.querySelector('.status-panel .panel-header p'), document.querySelector('.status-note'), document.querySelector('.risk-summary > div:first-child b'), document.querySelector('.risk-summary > div:last-child b')];
   if (labels[0]) labels[0].textContent = `${events.length} events recorded · ${status.scheduled_events} planned`;

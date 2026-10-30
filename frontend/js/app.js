@@ -1,8 +1,8 @@
-import { getEvents, getGeoJSON, getStatus, getTwin, postJSON, websocketURL } from './api.js';
+import { getEvents, getStatus, getTwin, postJSON, websocketURL } from './api.js';
 import { renderDashboard, setConnection } from './dashboard.js';
-import { renderAgentEvaluation, resetAgentPanel } from './agents.js';
-import { clearRoute, initMap, pickPointOnMap, renderTwinMap, showRoute } from './map.js';
-import { initAssistant } from './assistant.js';
+import { renderAgentEvaluation, resetAgentPanel } from './agents.js?v=assistant-firestore-20261030-1';
+import { clearRoute, initMap, pickPointOnMap, renderTwinMap, showRoute, showSuggestedRoutes } from './map.js?v=assistant-firestore-20261030-1';
+import { initAssistant } from './assistant.js?v=assistant-firestore-20261030-1';
 import { configureEventForm, mountOperationsPanel, readEventPayload, renderEventHistory, renderSimulationStatus, showIntegrationNotice } from './simulation.js';
 
 let twinState;
@@ -14,6 +14,19 @@ let socket;
 let refreshTimer;
 let heartbeat;
 let formSignature;
+let refreshInFlight;
+let refreshQueued = false;
+
+function stateGeoJSON(state) {
+  return {
+    type: 'FeatureCollection',
+    features: (state.roads || []).map(road => ({
+      type: 'Feature', id: road.id,
+      geometry: { type: 'LineString', coordinates: road.coordinates },
+      properties: { id: road.id, name: road.name, status: road.status, risk_score: road.risk_score, source: road.source },
+    })),
+  };
+}
 
 const setText = (selector, value) => {
   const node = document.querySelector(selector);
@@ -160,9 +173,12 @@ function renderShelterRanking(data) {
   }
 }
 
-async function refreshDashboard() {
+async function loadAndRenderDashboard() {
   try {
-    const [state, status, events, geojson] = await Promise.all([getTwin(), getStatus(), getEvents(), getGeoJSON()]);
+    // The twin snapshot already contains road geometry and status. Derive the
+    // map features from that same snapshot to avoid a second large, possibly
+    // out-of-date GeoJSON download on every control action.
+    const [state, status, events] = await Promise.all([getTwin(), getStatus(), getEvents()]);
     twinState = state;
     renderRouteChoices(state);
     simulationStatus = status;
@@ -181,7 +197,7 @@ async function refreshDashboard() {
       formSignature = nextFormSignature;
     }
     try {
-      if (mapReady) renderTwinMap(geojson, state);
+      if (mapReady) renderTwinMap(stateGeoJSON(state), state);
     } catch (error) {
       const mapNode = document.getElementById('map');
       mapNode.classList.add('map-error');
@@ -196,6 +212,20 @@ async function refreshDashboard() {
     if (!refreshTimer) refreshTimer = window.setTimeout(() => { refreshTimer = null; refreshDashboard(); }, 5000);
     return false;
   }
+}
+
+function refreshDashboard() {
+  if (refreshInFlight) {
+    refreshQueued = true;
+    return refreshInFlight;
+  }
+  refreshInFlight = (async () => {
+    do {
+      refreshQueued = false;
+      await loadAndRenderDashboard();
+    } while (refreshQueued);
+  })().finally(() => { refreshInFlight = undefined; });
+  return refreshInFlight;
 }
 
 function buildEvent() {
@@ -309,7 +339,7 @@ function bindControls() {
       pendingRevision = twinState.revision;
       const result = await postJSON('/api/agents/evaluate', pendingEvent);
       clearRoute();
-      renderAgentEvaluation(result, twinState, showRoute);
+      renderAgentEvaluation(result, twinState, showRoute, showSuggestedRoutes);
       applyButton.disabled = false;
       showIntegrationNotice('Review complete. Read the plain-language summary in Decision support before applying the event.');
     } catch (error) {

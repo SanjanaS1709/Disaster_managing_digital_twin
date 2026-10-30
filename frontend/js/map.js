@@ -9,6 +9,44 @@ let activeRouteRoadIds = [];
 let activeRouteStartLocation;
 let activeRouteCoordinates;
 let latestGeoJSON;
+let roadLayersById = new Map();
+
+function roadStyle(feature) {
+  const status = feature.properties.status || 'open';
+  return { color: roadColors[status] || '#71827e', weight: status === 'open' ? 1.4 : 2.2, opacity: status === 'open' ? .42 : .78 };
+}
+
+function updateRoadLayer(geojson) {
+  const nextIds = new Set(geojson.features.map(feature => feature.properties?.id || feature.id));
+  const sameNetwork = nextIds.size === roadLayersById.size && [...nextIds].every(id => roadLayersById.has(id));
+  if (!sameNetwork) {
+    roadsLayer.clearLayers();
+    roadsLayer.addData(geojson);
+    roadLayersById = new Map();
+    roadsLayer.eachLayer(layer => roadLayersById.set(layer.feature.properties?.id || layer.feature.id, layer));
+    return;
+  }
+  for (const feature of geojson.features) {
+    const id = feature.properties?.id || feature.id;
+    const layer = roadLayersById.get(id);
+    const previous = layer.feature.properties;
+    if (previous.status === feature.properties.status && previous.risk_score === feature.properties.risk_score) continue;
+    layer.feature.properties = feature.properties;
+    layer.setStyle(roadStyle(feature));
+    layer.bindPopup(popup(feature.properties.name || id, [
+      ['Road ID', id], ['Status', feature.properties.status], ['Risk', feature.properties.risk_score],
+    ]));
+  }
+}
+
+function rainfallImpact(value, unit) {
+  const intensity = unit === 'mm/hour' ? value : value / 2;
+  const severity = intensity < 15 ? .25 : intensity < 30 ? .5 : intensity < 50 ? .75 : 1;
+  if (severity <= .25) return { blocked: 0, restricted: 250 };
+  if (severity <= .5) return { blocked: 250, restricted: 800 };
+  if (severity <= .75) return { blocked: 600, restricted: 1500 };
+  return { blocked: 1000, restricted: 2500 };
+}
 
 function popup(title, rows) {
   const box = document.createElement('div');
@@ -36,10 +74,7 @@ export function initMap() {
   }).addTo(map);
   L.control.zoom({ position: 'topright' }).addTo(map);
   roadsLayer = L.geoJSON(null, {
-    style: feature => {
-      const status = feature.properties.status || 'open';
-      return { color: roadColors[status] || '#71827e', weight: status === 'open' ? 1.4 : 2.2, opacity: status === 'open' ? .42 : .78 };
-    },
+    style: roadStyle,
     onEachFeature: (feature, layer) => layer.bindPopup(popup(feature.properties.name || feature.properties.id, [
       ['Road ID', feature.properties.id], ['Status', feature.properties.status], ['Risk', feature.properties.risk_score],
     ])),
@@ -79,11 +114,10 @@ function fitLiveBounds() {
 export function renderTwinMap(geojson, state) {
   if (!map || !geojson) return;
   latestGeoJSON = geojson;
-  roadsLayer.clearLayers();
   shelterLayer.clearLayers();
   unitsLayer.clearLayers();
   rainfallLayer.clearLayers();
-  roadsLayer.addData(geojson);
+  updateRoadLayer(geojson);
   renderActiveRoute(activeRouteStartLocation);
   for (const shelter of state.shelters || []) {
     L.circleMarker([shelter.location[1], shelter.location[0]], { radius: 8, color: '#071522', weight: 3, fillColor: '#39b8c7', fillOpacity: 1 })
@@ -99,6 +133,15 @@ export function renderTwinMap(geojson, state) {
     const reading = zone.rainfall?.at(-1);
     if (!zone.location || !reading) continue;
     const color = reading.value >= 60 ? '#ed777d' : reading.value >= 35 ? '#e8ba6f' : '#62c6d1';
+    if (zone.rainfall.length > 1) {
+      const impact = rainfallImpact(reading.value, reading.unit);
+      L.circle([zone.location[1], zone.location[0]], {
+        radius: impact.restricted, color: '#d0a24d', weight: 1, dashArray: '5 5', fillColor: '#d0a24d', fillOpacity: .07,
+      }).bindPopup(popup(`Simulated restricted area · ${zone.id}`, [['Radius', `${impact.restricted} m`], ['Rainfall', `${reading.value} ${reading.unit}`]])).addTo(rainfallLayer);
+      if (impact.blocked) L.circle([zone.location[1], zone.location[0]], {
+        radius: impact.blocked, color: '#c7666d', weight: 1, fillColor: '#c7666d', fillOpacity: .12,
+      }).bindPopup(popup(`Simulated blocked area · ${zone.id}`, [['Radius', `${impact.blocked} m`], ['Rainfall', `${reading.value} ${reading.unit}`]])).addTo(rainfallLayer);
+    }
     L.circleMarker([zone.location[1], zone.location[0]], { radius: 12 + reading.value / 10, color, weight: 2, fillColor: color, fillOpacity: .2 })
       .bindPopup(popup(`Rainfall zone ${zone.id}`, [['Rainfall', `${reading.value} ${reading.unit}`], ['Data', 'Simulated scenario']]))
       .addTo(rainfallLayer);
@@ -161,6 +204,33 @@ export function showRoute(roadIds, startLocation, routeCoordinates) {
   activeRouteCoordinates = Array.isArray(routeCoordinates) ? routeCoordinates : undefined;
   renderActiveRoute(activeRouteStartLocation, activeRouteCoordinates);
   if (routeLayer._routeBounds?.isValid()) map.fitBounds(routeLayer._routeBounds.pad(.12), { maxZoom: 16 });
+}
+
+export function showSuggestedRoutes(routes) {
+  if (!map) return;
+  routeLayer.clearLayers();
+  routeLayer._routeBounds = null;
+  const palette = ['#31d6e5', '#ffbf47', '#c58bff', '#55dfa1', '#ff7885', '#7ea6ff'];
+  const bounds = L.latLngBounds();
+  let drawn = 0;
+  for (const [index, route] of routes.entries()) {
+    const coordinates = route?.result?.route_geometry?.coordinates;
+    if (!route?.result?.reachable || !Array.isArray(coordinates) || coordinates.length < 2) continue;
+    const color = palette[index % palette.length];
+    const feature = { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates } };
+    const layer = L.geoJSON(feature, {
+      style: { color: '#081b26', weight: 9, opacity: .88, lineCap: 'round', lineJoin: 'round' },
+    }).addTo(routeLayer);
+    L.geoJSON(feature, {
+      style: { color, weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' },
+    }).bindTooltip(`Relief unit ${route.unit_id} → shelter ${route.shelter_id}`, { sticky: true }).addTo(routeLayer);
+    bounds.extend(layer.getBounds());
+    drawn += 1;
+  }
+  if (drawn) {
+    routeLayer._routeBounds = bounds;
+    map.fitBounds(bounds.pad(.12), { maxZoom: 15 });
+  }
 }
 
 export function clearRoute() {

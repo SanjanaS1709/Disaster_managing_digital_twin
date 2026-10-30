@@ -1,4 +1,4 @@
-﻿import { postJSON } from './api.js';
+import { postJSON, request } from './api.js';
 
 const suggestions = [
   'What is the current disaster risk in this area?',
@@ -8,7 +8,8 @@ const suggestions = [
   'Summarize the latest available disaster information.',
   'Explain the risk indicators displayed on this dashboard.',
 ];
-let sessionId;
+const SESSION_STORAGE_KEY = 'fieldops-assistant-session-id';
+let sessionId = sessionStorage.getItem(SESSION_STORAGE_KEY) || undefined;
 let pending = false;
 
 function addMessage(role, message, { loading = false, error = false, sources = [], notice } = {}) {
@@ -54,6 +55,7 @@ function setPending(value) {
   pending = value;
   document.getElementById('assistant-send').disabled = value;
   document.getElementById('assistant-input').disabled = value;
+  document.getElementById('assistant-clear').disabled = value;
   document.getElementById('assistant-status').textContent = value ? 'Checking dashboard data and preparing an answer…' : 'Answers use available dashboard data and general preparedness knowledge.';
 }
 
@@ -67,6 +69,7 @@ async function sendMessage(value) {
   try {
     const result = await postJSON('/api/assistant/chat', { message, ...(sessionId ? { session_id: sessionId } : {}) });
     sessionId = result.session_id;
+    sessionStorage.setItem(SESSION_STORAGE_KEY, sessionId);
     loadingBubble.remove();
     addMessage('bot', result.answer, { sources: result.sources || [], notice: result.safety_notice });
     document.getElementById('assistant-status').textContent = 'Answer based on the current simulation snapshot and general guidance. No live alerts are connected.';
@@ -84,6 +87,27 @@ async function sendMessage(value) {
 export function initAssistant() {
   const form = document.getElementById('assistant-form');
   const input = document.getElementById('assistant-input');
+  if (sessionId) {
+    document.getElementById('assistant-send').disabled = true;
+    input.disabled = true;
+    document.getElementById('assistant-clear').disabled = true;
+    request(`/api/assistant/sessions/${encodeURIComponent(sessionId)}`)
+      .then(result => {
+        if (!result.messages?.length) return;
+        const log = document.getElementById('assistant-messages');
+        log.replaceChildren();
+        for (const item of result.messages) addMessage(item.role === 'user' ? 'user' : 'bot', item.content, { sources: item.sources || [] });
+        document.getElementById('assistant-status').textContent = 'Restored this tab’s saved conversation.';
+      })
+      .catch(() => {
+        document.getElementById('assistant-status').textContent = 'Could not restore the saved conversation. You can still start a new chat.';
+      })
+      .finally(() => {
+        document.getElementById('assistant-send').disabled = false;
+        input.disabled = false;
+        document.getElementById('assistant-clear').disabled = false;
+      });
+  }
   form.addEventListener('submit', event => {
     event.preventDefault();
     sendMessage(input.value);
@@ -97,12 +121,21 @@ export function initAssistant() {
   document.querySelectorAll('.assistant-suggestions button').forEach((button, index) => {
     button.addEventListener('click', () => sendMessage(suggestions[index] || button.textContent));
   });
-  document.getElementById('assistant-clear').addEventListener('click', () => {
+  document.getElementById('assistant-clear').addEventListener('click', async () => {
+    const oldSessionId = sessionId;
     sessionId = undefined;
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
     const log = document.getElementById('assistant-messages');
     log.replaceChildren();
     addMessage('bot', 'Conversation cleared. I can explain the simulation and share general preparedness guidance. I cannot verify live alerts, road conditions, or shelter availability.');
     document.getElementById('assistant-status').textContent = 'A new conversation will start with the next question.';
     input.focus();
+    if (oldSessionId) {
+      try {
+        await request(`/api/assistant/sessions/${encodeURIComponent(oldSessionId)}`, { method: 'DELETE' });
+      } catch {
+        document.getElementById('assistant-status').textContent = 'This tab was cleared, but saved history could not be deleted from the backend.';
+      }
+    }
   });
 }
